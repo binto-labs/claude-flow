@@ -32,12 +32,18 @@ This is a **practical, no-nonsense guide** for developers who want to use Claude
 
 ### Three Ways to Use Claude Flow
 
-**1. As a Claude Code Plugin (Recommended - Auto-Enhancement)**
+**1. As CLI Tool (Recommended - Direct Execution)**
 ```bash
-# In Claude Code, run:
-/plugin ruvnet/claude-flow
+# Use without installation
+npx claude-flow@alpha <command>
 
-# This gives you PreToolUse hooks that automatically:
+# Or install globally
+npm install -g claude-flow@alpha
+claude-flow <command>
+
+# Initialize project with hooks
+npx claude-flow@alpha init --force
+# This creates .claude-plugin/hooks/ with PreToolUse hooks that automatically:
 # - Make rm commands safer (adds -i)
 # - Organize files properly (tests → /tests/)
 # - Format git commits with conventions
@@ -57,14 +63,13 @@ mcp__claude-flow__memory_usage
 mcp__claude-flow__agent_spawn
 ```
 
-**3. As CLI Tool (Direct Execution)**
+**3. As Claude Code Plugin (Experimental - Not Fully Supported)**
 ```bash
-# Use without installation
-npx claude-flow@alpha <command>
-
-# Or install globally
-npm install -g claude-flow@alpha
-claude-flow <command>
+# NOTE: The /plugin add command is not yet fully supported by Claude Code
+# See: docs/PLUGIN_SYSTEM_INVESTIGATION_REPORT.md for details
+#
+# For now, use Method 1 (CLI with npx claude-flow@alpha init) to get hooks
+# The plugin infrastructure exists but requires manual setup via init command
 ```
 
 ---
@@ -124,10 +129,10 @@ git commit -m "fix bug"  → git commit -m "[fix] fix bug\n\nCo-Authored-By: cla
 git commit -m "add feature" → git commit -m "[feat] add feature\n\nCo-Authored-By: claude-flow <noreply@ruv.io>"
 ```
 
-**How to enable**: Install the plugin:
+**How to enable**: Initialize with CLI:
 ```bash
-# In Claude Code:
-/plugin ruvnet/claude-flow
+# Initialize project (creates hooks automatically)
+npx claude-flow@alpha init --force
 
 # Verify it's working:
 ls -la .claude-plugin/hooks/hooks.json
@@ -467,10 +472,7 @@ npx claude-flow@alpha pair --start
 
 **Setup:**
 ```bash
-# 1. Install plugin for auto-enhancement
-# In Claude Code: /plugin ruvnet/claude-flow
-
-# 2. Initialize project
+# 1. Initialize project (includes hooks for auto-enhancement)
 mkdir my-api && cd my-api
 npx claude-flow@alpha init --force
 npm init -y
@@ -699,8 +701,8 @@ ls -la .claude-plugin/
 # 2. Verify hooks.json exists
 cat .claude-plugin/hooks/hooks.json
 
-# 3. Reinstall if needed
-/plugin ruvnet/claude-flow --force
+# 3. Reinitialize if needed
+npx claude-flow@alpha init --force
 ```
 
 ### Problem: MCP Tools Not Available
@@ -803,8 +805,7 @@ npx claude-flow@alpha verify rollback --checkpoint last
 
 ```bash
 # Day 1: Setup and architecture
-/plugin ruvnet/claude-flow  # In Claude Code
-npx claude-flow@alpha init --force
+npx claude-flow@alpha init --force  # Creates hooks automatically
 
 # Work in Claude Code:
 # "Design a REST API for user management with auth"
@@ -839,7 +840,7 @@ mcp__claude-flow__memory_usage({
 })
 
 # Each developer:
-/plugin ruvnet/claude-flow  # Auto-enforcement
+npx claude-flow@alpha init --force  # Setup hooks for auto-enforcement
 # Standards automatically applied to all code
 
 # Benefits:
@@ -853,7 +854,7 @@ mcp__claude-flow__memory_usage({
 
 ```bash
 # Setup
-/plugin ruvnet/claude-flow
+npx claude-flow@alpha init --force  # Creates hooks
 claude mcp add claude-flow npx claude-flow@alpha mcp start
 
 # Analyze codebase
@@ -887,7 +888,7 @@ mcp__claude-flow__memory_usage({
 
 **Goal**: Basic file organization and safety
 
-1. Install plugin: `/plugin ruvnet/claude-flow`
+1. Initialize hooks: `npx claude-flow@alpha init --force`
 2. Build something small (API, app, whatever)
 3. Notice files auto-organizing
 4. Notice git commits auto-formatting
@@ -925,8 +926,7 @@ mcp__claude-flow__memory_usage({
 
 ```bash
 # Setup
-npx claude-flow@alpha init --force
-/plugin ruvnet/claude-flow  # In Claude Code
+npx claude-flow@alpha init --force  # Creates hooks
 claude mcp add claude-flow npx claude-flow@alpha mcp start
 
 # Memory
