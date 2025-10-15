@@ -1,52 +1,192 @@
-# Dependencies
-node_modules/
-.deno/
+# ============================================================================
+# CLAUDE-FLOW .GITIGNORE - STRICT MODE
+# Security-first configuration for open source repository
+# Only templates and documentation are committed
+# ============================================================================
+
+# ============================================================================
+# SECURITY - SENSITIVE DATA (NEVER COMMIT)
+# ============================================================================
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*secret*
+*credential*
+*token*
+*password*
+*api-key*
+*apikey*
+
+# Authentication files
+.npmrc
+.yarnrc
+.netrc
+auth.json
+credentials.json
+
+# ============================================================================
+# CLAUDE-FLOW RUNTIME DATA (ALL IGNORED)
+# ============================================================================
+
+# SQLite databases (contain user data, never commit)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+
+# Runtime directories with user data
+.swarm/
+.hive-mind/
+.claude-flow/
+.ruv-swarm/
+
+# Memory and session data
+memory/
+!memory/README.md
+!memory/agents/README.md
+!memory/sessions/README.md
+coordination/
+sessions/
+
+# Metrics and performance data (runtime generated)
+*-metrics.json
+token-usage.json
+performance-*.json
+
+# Logs and debug output
+*.log
+logs/
+mcp-server.log
+swarm-debug.log
+ui_*.log
+init-output.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.pnpm-debug.log*
 
-# Build outputs
+# ============================================================================
+# CLAUDE CODE / CLAUDE SETTINGS (MOSTLY IGNORED)
+# ============================================================================
+
+# User-specific settings (never commit)
+.claude/settings.local.json
+.claude/checkpoints/
+.claude/cache/
+.claude/sessions/
+
+# Keep only template settings (examples for users)
+# .claude/config.json - KEPT (base template)
+# .claude/settings-*.json - KEPT (preset examples)
+# .claude/settings.json - IGNORED (user-modified)
+.claude/settings.json
+
+# Plugin hooks (user-generated from init)
+.claude-plugin/
+
+# ============================================================================
+# DEPENDENCIES
+# ============================================================================
+
+node_modules/
+.deno/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# ============================================================================
+# BUILD OUTPUT
+# ============================================================================
+
 dist/
+dist-cjs/
 build/
 out/
-*.exe
 *.tsbuildinfo
 .turbo/
 
-# Binaries
+# Binaries (except templates)
 bin/claude-flow-*
 !bin/claude-flow
 
-# IDE
+# ============================================================================
+# DEVELOPMENT & TESTING
+# ============================================================================
+
+# Test outputs
+coverage/
+.nyc_output/
+tests/results/
+tests/logs/
+test-output/
+test-reports/
+*.lcov
+
+# Test artifacts
+output/
+api-project/
+test-init/
+test-full-init/
+swarm-runs/
+
+# Temporary development files
+analyzing/
+the/
+claude-flow-mcp-wrapper/
+package
+.research/
+
+# ============================================================================
+# IDE & EDITORS
+# ============================================================================
+
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
+
+# ============================================================================
+# OPERATING SYSTEM
+# ============================================================================
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
+# Linux
+*~
+.directory
+.Trash-*
 
-# Testing
-coverage/
-.nyc_output/
-tests/results/
-tests/logs/
-*.lcov
+# ============================================================================
+# LANGUAGE-SPECIFIC
+# ============================================================================
 
 # Python
 __pycache__/
@@ -55,119 +195,82 @@ __pycache__/
 *.so
 .Python
 *.egg-info/
-dist/
 *.egg
+venv/
+env/
+ENV/
 
-# Test outputs
-output/
-api-project/
+# ============================================================================
+# TEMPORARY & CACHE FILES
+# ============================================================================
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Temp files
 *.tmp
 *.temp
+*.cache
 .cache/
 tmp/
+temp/
 
-# Claude-Flow specific
-claude-flow.db
-claude-flow.config.json
-# memory/
-# sessions/
-
-# MCP/Swarm
-.ruv-swarm/
-mcp-server.log
-swarm-debug.log
-memory/backups/
-ui_*.log
-init-output.log
-
-# Development
+# Process files
 *.pid
 *.seed
 *.pid.lock
-package
-test-init
-test-full-init
-swarm-runs
 
-# Temporary files
-analyzing
-the
-claude-flow-mcp-wrapper
+# ============================================================================
+# BACKUP & ARCHIVE FILES
+# ============================================================================
 
-# Test artifacts
-test-output/
-test-reports/
-# SQLite Database Files
-.swarm/memory.db*
-.hive-mind/hive.db*
+*.bak
+*.backup
+*.old
+*.orig
+*~
+memory/backups/
 
+# ============================================================================
+# PROJECT-SPECIFIC GENERATED FILES
+# ============================================================================
 
-
-
-
-
-# Removed Windows wrapper files per user request
+# Windows wrapper files (removed per user request)
 hive-mind-prompt-*.txt
 
-
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
-
-
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
-
-
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
-
-
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
-
-
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
-./claude/checkpoints/
-
-
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
-.research/
-
-
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
-
-# Claude Flow generated files
-.claude/settings.local.json
-.mcp.json
+# Generated config files
 claude-flow.config.json
-.swarm/
-.hive-mind/
-.claude-flow/
-memory/
-coordination/
-memory/claude-flow-data.json
-memory/sessions/*
-!memory/sessions/README.md
-memory/agents/*
-!memory/agents/README.md
-coordination/memory_bank/*
-coordination/subtasks/*
-coordination/orchestration/*
-*.db
-*.db-journal
-*.db-wal
-*.sqlite
-*.sqlite-journal
-*.sqlite-wal
-claude-flow
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
+.mcp.json
+
+# Benchmark artifacts
+benchmark/.hive-mind/
+benchmark/.swarm/
+
+# Docker test artifacts
+docker/docker-test/.swarm/
+
+# Example project artifacts (keep example code, ignore generated data)
+examples/*/.env
+examples/*/.swarm/
+examples/*/.hive-mind/
+examples/*/.claude-flow/
+examples/*/node_modules/
+examples/*/dist/
+
+# ============================================================================
+# WHAT GETS COMMITTED (REFERENCE)
+# ============================================================================
+#
+# ✅ Source code (src/)
+# ✅ Documentation (docs/, *.md)
+# ✅ Configuration templates (.claude/config.json, settings-*.json)
+# ✅ Example .env files (.env.example)
+# ✅ Package manifests (package.json, package-lock.json)
+# ✅ README files in data directories (memory/*/README.md)
+# ✅ Test files (tests/*.test.js, but not test results)
+# ✅ Example code (examples/*/src/, but not runtime data)
+#
+# ❌ User settings (.claude/settings.json)
+# ❌ Runtime databases (.swarm/, .hive-mind/, .claude-flow/)
+# ❌ Secrets and credentials (.env, *.key, *secret*)
+# ❌ Logs and metrics (*.log, *-metrics.json)
+# ❌ Build artifacts (dist/, node_modules/)
+# ❌ User sessions and cache (.claude/checkpoints/, .claude/cache/)
+#
+# ============================================================================
