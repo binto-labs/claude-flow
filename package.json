@@ -59,8 +59,7 @@
     "publish:patch": "npm version patch && npm publish",
     "prepack": "echo 'Alpha release - skipping build for now'",
     "postpack": "echo 'Package created successfully'",
-    "prepare-publish": "node scripts/prepare-publish.js",
-    "eval-guide": "npx tsx scripts/eval-user-guide.ts"
+    "prepare-publish": "node scripts/prepare-publish.js"
   },
   "keywords": [
     "claude",
