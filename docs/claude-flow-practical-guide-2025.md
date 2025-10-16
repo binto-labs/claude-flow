@@ -882,6 +882,590 @@ mcp__claude-flow__memory_usage({
 
 ---
 
+## 💾 Team Knowledge Management
+
+### Why Memory Management Matters
+
+Claude Flow's memory system is designed to **prevent document proliferation** and maintain a **single source of truth** for architectural decisions. Unlike traditional AI assistants that create `design-v1.md`, `design-v2.md`, `design-final-REAL.md`, Claude Flow uses **UPSERT** (update existing keys) instead of creating duplicates.
+
+**The Problem This Solves:**
+- ❌ **Without memory**: Every session starts fresh, decisions are lost, context disappears
+- ❌ **With manual docs**: Files proliferate (`auth-v1.md`, `auth-v2.md`, `auth-final.md`), conflicts arise
+- ✅ **With Claude Flow memory**: ONE decision per key, version tracked, automatically consolidated
+
+---
+
+### Memory Type Reference
+
+Choose the right memory type based on how long you need to persist data:
+
+| Type | TTL | Use For | Example Key |
+|------|-----|---------|-------------|
+| `knowledge` | ∞ **PERMANENT** | Architecture decisions, design patterns, requirements | `architecture/database` |
+| `consensus` | ∞ **PERMANENT** | Multi-agent voting results, team agreements | `consensus/auth-strategy` |
+| `system` | ∞ **PERMANENT** | System configuration, critical settings | `system/config` |
+| `result` | ∞ **PERMANENT** | Task outputs, build artifacts | `result/migration-v3` |
+| `context` | 1 hour | Temporary working context, session state | `context/current-feature` |
+| `task` | 30 min | Task-specific temporary data | `task/build-status` |
+| `metric` | 1 hour | Performance metrics, telemetry | `metrics/build-time` |
+| `error` | 24 hours | Error logs, debugging data | `errors/deployment-failed` |
+
+**Key principle**: Use `knowledge` type for anything you want to survive across sessions, codespace restarts, and team sharing.
+
+---
+
+### 1. Storing Architectural Decisions (MANUAL STEP)
+
+**When to store**: After making important architectural decisions during development.
+
+**What to store**: Architecture decisions, design patterns, requirements, technology choices.
+
+#### CLI Method (Direct)
+
+```bash
+# Store database choice (PERMANENT - type: knowledge)
+npx claude-flow@alpha memory store "architecture/database" \
+  '{"decision": "PostgreSQL with pgvector", "reasoning": "ACID compliance + vector search", "consensus": 0.8, "votes": {"PostgreSQL": 4, "MongoDB": 1}}' \
+  --type knowledge \
+  --namespace my-project
+
+# Store API architecture
+npx claude-flow@alpha memory store "architecture/api-design" \
+  '{"pattern": "REST", "framework": "Express 4.18", "auth": "JWT with refresh tokens", "rate_limiting": "redis"}' \
+  --type knowledge
+
+# Store requirements (PERMANENT)
+npx claude-flow@alpha memory store "specs/requirements/security" \
+  '{"must_have": ["2FA", "encryption at rest", "RBAC"], "nice_to_have": ["SSO", "OAuth2"]}' \
+  --type knowledge
+
+# Store design patterns
+npx claude-flow@alpha memory store "architecture/patterns/microservices" \
+  '{"service_mesh": "Istio", "api_gateway": "Kong", "service_discovery": "Consul"}' \
+  --type knowledge
+```
+
+#### MCP Method (via Claude Code)
+
+```javascript
+// During development session in Claude Code
+mcp__claude-flow__memory_usage({
+  action: "store",
+  key: "architecture/authentication",
+  value: {
+    decision: "JWT with refresh tokens",
+    reasoning: "Stateless, scalable, secure",
+    alternatives_considered: ["Session-based", "OAuth2 only", "SAML"],
+    implementation: {
+      access_token_ttl: "15m",
+      refresh_token_ttl: "7d",
+      rotation: true
+    },
+    consensus: true,
+    votes: 5,
+    confidence: 0.95
+  },
+  type: "knowledge",  // PERMANENT
+  namespace: "my-project"
+})
+```
+
+**IMPORTANT: You must explicitly store decisions - they are NOT automatically stored!**
+
+---
+
+### 2. Viewing Stored Decisions
+
+```bash
+# Search all architectural decisions
+npx claude-flow@alpha memory search "architecture/*"
+
+# Search specific domain
+npx claude-flow@alpha memory search "architecture/auth*"
+
+# Retrieve specific decision
+npx claude-flow@alpha memory retrieve "architecture/database"
+
+# View memory statistics
+npx claude-flow@alpha memory stats
+
+# List all memory keys
+npx claude-flow@alpha memory list
+```
+
+**MCP method:**
+```javascript
+// Search in Claude Code
+mcp__claude-flow__memory_search({
+  pattern: "architecture/*",
+  namespace: "my-project"
+})
+```
+
+---
+
+### 3. The UPSERT Pattern (Preventing Duplication)
+
+**The golden rule**: Use the SAME KEY to update decisions, not create new versions.
+
+#### ❌ WRONG - Creates Duplicates
+
+```bash
+# Bad: Creating new versions (3 separate entries!)
+npx claude-flow@alpha memory store "architecture/auth-v1" '{"type": "JWT"}' --type knowledge
+npx claude-flow@alpha memory store "architecture/auth-v2" '{"type": "JWT", "refresh": true}' --type knowledge
+npx claude-flow@alpha memory store "architecture/auth-final" '{"type": "JWT", "refresh": true, "rotation": true}' --type knowledge
+
+# Result: 3 conflicting entries, which is correct? 😵
+```
+
+#### ✅ CORRECT - Updates Existing Key
+
+```bash
+# Good: Same key, version auto-incremented
+npx claude-flow@alpha memory store "architecture/auth" '{"type": "JWT"}' --type knowledge
+# → Creates entry (version: 1, created_at: 2025-01-16T10:00:00Z)
+
+npx claude-flow@alpha memory store "architecture/auth" '{"type": "JWT", "refresh": true}' --type knowledge
+# → Updates entry (version: 2, created_at: 2025-01-16T10:00:00Z, updated_at: 2025-01-16T14:30:00Z)
+
+npx claude-flow@alpha memory store "architecture/auth" '{"type": "JWT", "refresh": true, "rotation": true}' --type knowledge
+# → Updates entry (version: 3, created_at: 2025-01-16T10:00:00Z, updated_at: 2025-01-16T16:00:00Z)
+
+# Result: ONE entry with version history ✅
+```
+
+**What happens under the hood:**
+```sql
+-- First store: INSERT
+INSERT INTO collective_memory (key, value, version)
+VALUES ('architecture/auth', '{"type":"JWT"}', 1);
+
+-- Second store: UPDATE (not INSERT)
+UPDATE collective_memory
+SET value = '{"type":"JWT","refresh":true}',
+    version = version + 1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE key = 'architecture/auth';
+```
+
+---
+
+### 4. Memory Consolidation (Automatic Cleanup)
+
+Claude Flow automatically merges similar memories to prevent redundancy.
+
+```bash
+# Manual consolidation (recommended after major phases)
+npx claude-flow@alpha memory consolidate
+
+# Example: Before consolidation
+# - architecture/auth-v1     (access_count: 10)
+# - architecture/auth-impl   (access_count: 15)
+# - architecture/authentication (access_count: 5)
+
+# After consolidation: 1 merged entry
+# - consolidated:auth (sourceCount: 3, confidence: 0.87 weighted average)
+```
+
+**When to run consolidation:**
+```bash
+# After SPARC Architecture phase
+npx claude-flow@alpha memory consolidate
+
+# After SPARC Refinement phase
+npx claude-flow@alpha memory consolidate
+
+# Weekly maintenance
+npx claude-flow@alpha memory consolidate
+
+# Before creating ADRs (clean up first)
+npx claude-flow@alpha memory consolidate
+```
+
+---
+
+### 5. Creating ADRs from Memory (MANUAL EXPORT TO GIT)
+
+**Why ADRs**: While memory persists in `.swarm/memory.db` (local, gitignored), ADRs are **markdown files in git** that the whole team can access.
+
+#### Option 1: Generate ADR from Memory (Recommended)
+
+```bash
+# Step 1: View available architectural decisions
+npx claude-flow@alpha memory search "architecture/*"
+
+# Output:
+# architecture/database → {"decision": "PostgreSQL", ...}
+# architecture/auth → {"decision": "JWT with refresh tokens", ...}
+# architecture/api-design → {"pattern": "REST", ...}
+
+# Step 2: Generate ADR using swarm agents
+npx claude-flow@alpha swarm "Create Architecture Decision Record from memory keys 'architecture/*'. Use template docs/adr/TEMPLATE.md. Save to docs/adr/002-system-architecture.md. Include all decisions, alternatives considered, and consensus scores." \
+  --agents api-docs,system-architect \
+  --quality-threshold 0.90
+
+# Step 3: Review generated ADR
+cat docs/adr/002-system-architecture.md
+
+# Step 4: Commit to git
+git add docs/adr/002-system-architecture.md
+git commit -m "docs: Add ADR-002 for system architecture decisions"
+```
+
+#### Option 2: Generate Specific ADR
+
+```bash
+# Create ADR for specific decision
+npx claude-flow@alpha swarm "Create ADR from memory key 'architecture/database' using template docs/adr/TEMPLATE.md. Include consensus vote results." \
+  --agents api-docs
+
+# Output: docs/adr/003-database-choice.md
+git add docs/adr/003-database-choice.md
+git commit -m "docs: Add ADR-003 for database architecture"
+```
+
+#### Option 3: Manual ADR Creation
+
+```bash
+# Copy template
+cp docs/adr/TEMPLATE.md docs/adr/004-authentication-strategy.md
+
+# Retrieve decision from memory
+npx claude-flow@alpha memory retrieve "architecture/auth"
+
+# Manually fill in template with retrieved data
+# Then commit
+git add docs/adr/004-*.md
+git commit -m "docs: Add ADR-004 for authentication strategy"
+```
+
+---
+
+### 6. Team Workflow: Memory → ADR → Git
+
+**Complete team knowledge sharing workflow:**
+
+```bash
+# ====================
+# DEVELOPER 1 (Monday): Makes architectural decision
+# ====================
+
+# 1. During SPARC Architecture phase, store decision in memory
+npx claude-flow@alpha memory store "architecture/deployment" \
+  '{"platform": "Kubernetes", "cloud": "AWS EKS", "reasoning": "Auto-scaling, HA, cost-effective", "consensus": 0.9}' \
+  --type knowledge \
+  --namespace team-project
+
+# 2. End of week: Generate ADR from week's decisions
+npx claude-flow@alpha swarm "Create ADR from all architecture/* memory keys this week" \
+  --agents api-docs,system-architect
+
+# 3. Commit ADR to git
+git add docs/adr/005-deployment-architecture.md
+git commit -m "docs: Add ADR-005 for deployment architecture"
+git push
+
+# ====================
+# DEVELOPER 2 (Tuesday): Joins project in new codespace
+# ====================
+
+# 1. Pull latest code (includes ADRs)
+git pull
+
+# 2. Read team decisions
+ls docs/adr/
+cat docs/adr/005-deployment-architecture.md
+
+# 3. Optionally: Import decisions into their local memory
+# (No automated command exists yet - use swarm to parse ADRs)
+npx claude-flow@alpha swarm "Read docs/adr/*.md and store key decisions in memory with type 'knowledge'" \
+  --agents researcher,system-architect
+
+# Or manually:
+npx claude-flow@alpha memory store "architecture/deployment" \
+  '{"platform": "Kubernetes", "cloud": "AWS EKS", ...}' \
+  --type knowledge \
+  --namespace team-project
+```
+
+**Key insight**:
+- **Memory** (`.swarm/memory.db`) = Fast local cache, **NOT** in git
+- **ADRs** (`docs/adr/*.md`) = Team knowledge base, **IN** git
+- **Workflow**: Memory → ADR → Git → Team
+
+---
+
+### 7. Multi-Agent Consensus for Contested Decisions
+
+When agents disagree, use **consensus voting** to prevent storing conflicting decisions.
+
+```bash
+# Scenario: 5 architects disagree on database choice
+
+# Step 1: Create consensus proposal (via MCP or CLI)
+npx claude-flow@alpha consensus propose \
+  --key "architecture/database" \
+  --options "PostgreSQL,MongoDB,MySQL" \
+  --threshold 0.6 \
+  --algorithm weighted_majority
+
+# Step 2: Agents vote (simulated here, normally done by swarm)
+# Agent 1: PostgreSQL (ACID compliance)
+# Agent 2: PostgreSQL (Strong relations)
+# Agent 3: MongoDB (Document flexibility)
+# Agent 4: PostgreSQL (JSON + ACID)
+# Agent 5: PostgreSQL (Query optimizer)
+
+# Step 3: Consensus reached (4/5 = 80% voted PostgreSQL)
+
+# Step 4: SINGLE decision stored in memory (not 5 conflicting ones)
+npx claude-flow@alpha memory store "architecture/database" \
+  '{"decision": "PostgreSQL", "consensus": true, "votes": {"PostgreSQL": 4, "MongoDB": 1}, "confidence": 0.8}' \
+  --type consensus  # Note: 'consensus' type (PERMANENT)
+```
+
+**MCP method:**
+```javascript
+// Create proposal
+const proposalId = await mcp__claude-flow__consensus_createProposal({
+  type: 'architecture_decision',
+  content: {
+    key: 'architecture/database',
+    options: ['PostgreSQL', 'MongoDB', 'MySQL']
+  },
+  threshold: 0.6,
+  algorithm: 'byzantine_tolerant'  // For security-critical decisions
+});
+
+// Agents vote...
+
+// Finalize and store result
+const result = await mcp__claude-flow__consensus_finalizeProposal(proposalId);
+
+// Result stored as ONE entry with consensus metadata
+```
+
+---
+
+### 8. Memory Best Practices
+
+#### ✅ DO:
+
+```bash
+# Use hierarchical key naming
+architecture/auth/jwt-config
+architecture/database/connection-pool
+specs/requirements/security/2fa
+
+# Use descriptive values (JSON objects)
+npx claude-flow@alpha memory store "architecture/cache" \
+  '{"strategy": "Redis", "ttl": "1h", "eviction": "LRU", "maxmemory": "2gb"}' \
+  --type knowledge
+
+# Run consolidation regularly
+npx claude-flow@alpha memory consolidate  # Weekly
+
+# Store consensus results
+--type consensus  # For team agreement decisions
+
+# Use appropriate memory types
+--type knowledge   # For PERMANENT architectural decisions
+--type context     # For temporary (1 hour) working state
+```
+
+#### ❌ DON'T:
+
+```bash
+# Don't use flat keys
+auth   # Bad: ambiguous
+config # Bad: too generic
+
+# Don't create version suffixes
+architecture/auth-v1   # Bad: creates duplicates
+architecture/auth-v2   # Bad: which one is current?
+architecture/auth-final # Bad: proliferation!
+
+# Don't mix temporary and permanent
+npx claude-flow@alpha memory store "architecture/database" ... --type task  # Bad: will expire in 30 min!
+
+# Don't forget to export to ADRs
+# Memory is local only - team can't access it without ADRs in git
+```
+
+---
+
+### 9. Troubleshooting Memory Issues
+
+#### Problem: Memory entries duplicated
+
+**Symptoms**: Multiple entries like `auth-v1`, `auth-v2`, `auth-final`
+
+**Solution**:
+```bash
+# 1. Run consolidation
+npx claude-flow@alpha memory consolidate
+
+# 2. Manually clean up duplicates
+npx claude-flow@alpha memory delete "architecture/auth-v1"
+npx claude-flow@alpha memory delete "architecture/auth-v2"
+
+# 3. Keep only canonical key
+npx claude-flow@alpha memory retrieve "architecture/auth-final"
+npx claude-flow@alpha memory store "architecture/auth" '<retrieved-value>' --type knowledge
+npx claude-flow@alpha memory delete "architecture/auth-final"
+```
+
+#### Problem: Can't find architectural decisions
+
+**Symptoms**: `memory retrieve` returns null
+
+**Solution**:
+```bash
+# 1. Search with wildcards
+npx claude-flow@alpha memory search "arch*"
+npx claude-flow@alpha memory search "*database*"
+
+# 2. List all keys
+npx claude-flow@alpha memory list
+
+# 3. Check namespace
+npx claude-flow@alpha memory stats  # Shows namespaces
+
+# 4. Verify type
+npx claude-flow@alpha memory search "architecture/*" --type knowledge
+```
+
+#### Problem: Memory persists after session
+
+**This is correct behavior!** Memory with `type: knowledge` is PERMANENT.
+
+**To clear:**
+```bash
+# Delete specific key
+npx claude-flow@alpha memory delete "architecture/old-decision"
+
+# Clear entire namespace (careful!)
+npx claude-flow@alpha memory clear --namespace old-project
+
+# Garbage collection (removes expired entries only)
+npx claude-flow@alpha memory gc
+```
+
+---
+
+### 10. Quick Reference: Memory Commands
+
+```bash
+# ========== STORE ==========
+# Store permanent architectural decision
+npx claude-flow@alpha memory store <key> <json-value> --type knowledge
+
+# Store temporary context (1 hour TTL)
+npx claude-flow@alpha memory store <key> <value> --type context
+
+# Store with namespace
+npx claude-flow@alpha memory store <key> <value> --namespace my-project
+
+# ========== RETRIEVE ==========
+# Get specific decision
+npx claude-flow@alpha memory retrieve <key>
+
+# Search by pattern
+npx claude-flow@alpha memory search "architecture/*"
+
+# List all keys
+npx claude-flow@alpha memory list
+
+# ========== MAINTENANCE ==========
+# Consolidate similar entries
+npx claude-flow@alpha memory consolidate
+
+# Delete entry
+npx claude-flow@alpha memory delete <key>
+
+# View statistics
+npx claude-flow@alpha memory stats
+
+# Garbage collection
+npx claude-flow@alpha memory gc
+
+# ========== EXPORT TO GIT ==========
+# Generate ADR from memory
+npx claude-flow@alpha swarm "Create ADR from memory:architecture/*" --agents api-docs
+```
+
+---
+
+### 11. Complete Example: End-to-End Workflow
+
+```bash
+# ==========================================
+# WEEK 1: Architecture Phase (SPARC)
+# ==========================================
+
+# Make architectural decisions and store them
+npx claude-flow@alpha memory store "architecture/database" \
+  '{"decision": "PostgreSQL 15", "reasoning": "ACID + JSON + pgvector", "consensus": 0.9}' \
+  --type knowledge
+
+npx claude-flow@alpha memory store "architecture/api" \
+  '{"framework": "Express 4.18", "pattern": "REST", "auth": "JWT"}' \
+  --type knowledge
+
+npx claude-flow@alpha memory store "architecture/deployment" \
+  '{"platform": "Kubernetes", "cloud": "AWS EKS", "cicd": "GitHub Actions"}' \
+  --type knowledge
+
+# View all decisions
+npx claude-flow@alpha memory search "architecture/*"
+
+# ==========================================
+# END OF WEEK 1: Document Decisions
+# ==========================================
+
+# Clean up any duplicates first
+npx claude-flow@alpha memory consolidate
+
+# Generate ADR from all architectural decisions
+npx claude-flow@alpha swarm "Create comprehensive ADR from all memory keys under 'architecture/*'. Use template docs/adr/TEMPLATE.md. Include all decisions, reasoning, and consensus scores. Save to docs/adr/006-system-architecture.md" \
+  --agents api-docs,system-architect \
+  --quality-threshold 0.90
+
+# Review generated ADR
+cat docs/adr/006-system-architecture.md
+
+# Commit to git for team
+git add docs/adr/006-system-architecture.md
+git commit -m "docs: Add ADR-006 for Week 1 architectural decisions
+
+- Database: PostgreSQL 15 with pgvector
+- API: Express REST with JWT auth
+- Deployment: Kubernetes on AWS EKS
+- Consensus scores: 0.90 average"
+
+git push
+
+# ==========================================
+# WEEK 2: New Developer Joins
+# ==========================================
+
+# New dev pulls code
+git pull
+
+# Read team decisions
+cat docs/adr/006-system-architecture.md
+
+# Import key decisions into their local memory (optional)
+npx claude-flow@alpha memory store "architecture/database" \
+  '{"decision": "PostgreSQL 15", "reasoning": "ACID + JSON + pgvector"}' \
+  --type knowledge
+
+# Now they have context for development!
+```
+
+---
+
 ## 🎓 Learning Path
 
 ### Beginner (Week 1)
