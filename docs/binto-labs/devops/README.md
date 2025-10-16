@@ -321,14 +321,15 @@ node tests/benchmark/agent-booster-benchmark.js
 ## 🔗 Related Documentation
 
 ### Core Documentation
-- [../CONTRIBUTING.md](../CONTRIBUTING.md) - Contribution guidelines
-- [../README.md](../README.md) - Main project README
-- [../CHANGELOG.md](../CHANGELOG.md) - Version history
+- [Fork README](../README.md) - Binto Labs fork documentation
+- [Main README](../../README.md) - Main project README
+- [CHANGELOG](../../CHANGELOG.md) - Version history
 
 ### Technical Documentation
-- [../technical/](../technical/) - Technical reference guides
-- [../hive-mind/](../hive-mind/) - Hive Mind documentation
-- [../reasoningbank/](../reasoningbank/) - ReasoningBank docs
+- [Technical Reference](../technical-reference/) - Fork technical reference guides
+- [Upstream Technical](../../technical-reference/) - Upstream technical guides
+- [Upstream Hive Mind](../../hive-mind/) - Hive Mind documentation
+- [Upstream ReasoningBank](../../reasoningbank/) - ReasoningBank docs
 
 ---
 

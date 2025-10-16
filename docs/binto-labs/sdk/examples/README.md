@@ -17,7 +17,7 @@ Demonstrates Git-like version control for AI sessions using the Checkpoint Manag
 
 **Run**:
 ```bash
-npx ts-node docs/sdk/examples/checkpoint-workflow.ts
+npx ts-node docs/binto-labs/sdk/examples/checkpoint-workflow.ts
 ```
 
 **Key Concepts**:
@@ -41,7 +41,7 @@ Demonstrates 10-20x performance gain with session forking for parallel agent exe
 
 **Run**:
 ```bash
-npx ts-node docs/sdk/examples/parallel-agents.ts
+npx ts-node docs/binto-labs/sdk/examples/parallel-agents.ts
 ```
 
 **Key Concepts**:
@@ -65,7 +65,7 @@ Combines SDK features with Claude Flow MCP tools for maximum power.
 
 **Run**:
 ```bash
-npx ts-node docs/sdk/examples/integrated-session.ts
+npx ts-node docs/binto-labs/sdk/examples/integrated-session.ts
 ```
 
 **Key Concepts**:
@@ -322,10 +322,10 @@ const query = query({
 
 ## Additional Resources
 
-- [SDK Improvements Analysis](/docs/sdk/SDK-IMPROVEMENTS-ANALYSIS.md)
-- [API Reference](/docs/sdk/API-REFERENCE.md)
-- [Executive Summary](/docs/sdk/EXECUTIVE-SUMMARY.md)
-- [Migration Guide](/docs/sdk/SDK-IMPROVEMENTS-ANALYSIS.md#9-migration-guide)
+- [SDK Improvements Analysis](../SDK-IMPROVEMENTS-ANALYSIS.md)
+- [API Reference](../API-REFERENCE.md)
+- [Executive Summary](../EXECUTIVE-SUMMARY.md)
+- [Migration Guide](../SDK-IMPROVEMENTS-ANALYSIS.md#9-migration-guide)
 
 ---
 

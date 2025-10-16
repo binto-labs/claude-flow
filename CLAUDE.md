@@ -19,7 +19,7 @@
 - Total: 176 markdown files
 - Only customizations: Documentation + enhanced .gitignore
 
-**See:** [BINTO-LABS-DOC-INDEX.md](BINTO-LABS-DOC-INDEX.md) for navigation
+**See:** [Binto Labs Documentation Index](docs/binto-labs/INDEX.md) for navigation
 
 **Upstream Repository:** https://github.com/ruvnet/claude-flow
 **Fork Repository:** https://github.com/binto-labs/claude-flow

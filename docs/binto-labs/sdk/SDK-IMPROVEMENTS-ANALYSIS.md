@@ -1995,10 +1995,10 @@ The architecture is **100% SDK-powered**, ensuring future compatibility and leve
 
 ## Additional Resources
 
-- **SDK API Documentation**: [SDK Reference](/docs/sdk/API-REFERENCE.md)
-- **Code Examples**: [Examples Directory](/docs/sdk/examples/)
-- **Migration Scripts**: [Migration Tools](/docs/sdk/migration/)
-- **Performance Benchmarks**: [Benchmark Results](/docs/sdk/benchmarks/)
+- **SDK API Documentation**: [SDK Reference](API-REFERENCE.md)
+- **Code Examples**: [Examples Directory](examples/)
+- **Migration Scripts**: [Migration Tools](migration/)
+- **Performance Benchmarks**: [Benchmark Results](benchmarks/)
 - **Video Tutorials**: [YouTube Playlist](https://youtube.com/@claude-flow)
 
 ---
