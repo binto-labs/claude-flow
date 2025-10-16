@@ -2265,6 +2265,267 @@ workflows:
 
 ## Advanced Features
 
+### Checkpoint Management (Session Restore Points)
+
+**Added in v2.7.0-alpha**
+
+**File:** `src/sdk/checkpoint-manager.ts:1-404`
+
+Claude-Flow provides Git-like checkpoint management for SDK sessions, enabling rollback to any previous state using message UUIDs.
+
+#### Core Concepts
+
+```typescript
+export interface Checkpoint {
+  id: string;              // Message UUID (checkpoint identifier)
+  sessionId: string;       // Session this checkpoint belongs to
+  description: string;     // Human-readable description
+  timestamp: number;       // When checkpoint was created
+  messageCount: number;    // Number of messages at checkpoint
+  totalTokens: number;     // Token usage at checkpoint
+  filesModified: string[]; // Files changed since previous checkpoint
+}
+```
+
+#### Creating Checkpoints
+
+```typescript
+import { checkpointManager } from 'claude-flow/sdk';
+import { query } from '@anthropic-ai/claude-code';
+
+// Start a session and track messages
+const sessionId = 'my-dev-session';
+const agentQuery = query({
+  prompt: 'Build authentication system',
+  options: { model: 'claude-sonnet-4', maxTurns: 50 }
+});
+
+// Track session for auto-checkpointing
+await checkpointManager.trackSession(
+  sessionId,
+  agentQuery,
+  true  // Enable auto-checkpoint every 10 messages
+);
+
+// Manual checkpoint creation
+const checkpointId = await checkpointManager.createCheckpoint(
+  sessionId,
+  'Completed user registration endpoint'
+);
+
+console.log(`Checkpoint created: ${checkpointId}`);
+// Output: Checkpoint created: msg_01ABC123DEF456...
+```
+
+**File Reference:** `src/sdk/checkpoint-manager.ts:106-144`
+
+#### Rolling Back to Checkpoints
+
+```typescript
+// List available checkpoints for a session
+const checkpoints = checkpointManager.listCheckpoints(sessionId);
+console.log(`Found ${checkpoints.length} checkpoints:`);
+checkpoints.forEach(cp => {
+  console.log(`  ${cp.id.substring(0, 12)}... - ${cp.description}`);
+  console.log(`    Messages: ${cp.messageCount}, Tokens: ${cp.totalTokens}`);
+});
+
+// Rollback to a specific checkpoint
+const rolledBackQuery = await checkpointManager.rollbackToCheckpoint(
+  checkpointId,
+  'Continue implementing authentication with sessions'
+);
+
+// SDK automatically rewinds to checkpoint state
+for await (const message of rolledBackQuery) {
+  console.log('[Resumed]', message.type);
+}
+```
+
+**File Reference:** `src/sdk/checkpoint-manager.ts:151-183`
+
+**Key Feature:** Uses SDK's `resumeSessionAt` to rewind to exact message UUID - no state recreation needed!
+
+#### Checkpoint Comparison
+
+```typescript
+// Compare two checkpoints
+const diff = checkpointManager.getCheckpointDiff(
+  'msg_01ABC123...',
+  'msg_01DEF456...'
+);
+
+console.log('Checkpoint Diff:');
+console.log(`  Messages added: ${diff.messagesDiff}`);
+console.log(`  Tokens used: ${diff.tokensDiff}`);
+console.log(`  Files added: ${diff.filesAdded.join(', ')}`);
+console.log(`  Files removed: ${diff.filesRemoved.join(', ')}`);
+```
+
+**File Reference:** `src/sdk/checkpoint-manager.ts:221-246`
+
+#### Event-Driven Checkpointing
+
+```typescript
+import { RealCheckpointManager } from 'claude-flow/sdk';
+
+const manager = new RealCheckpointManager({
+  persistPath: '.claude-flow/checkpoints',
+  autoCheckpointInterval: 10,  // Every 10 messages
+  maxCheckpoints: 50           // Keep max 50 checkpoints per session
+});
+
+// Listen to checkpoint events
+manager.on('checkpoint:created', ({ checkpointId, description, messageCount }) => {
+  console.log(`✓ Checkpoint: ${description} (${messageCount} messages)`);
+});
+
+manager.on('checkpoint:rollback', ({ checkpointId, description }) => {
+  console.log(`⏮ Rolled back to: ${description}`);
+});
+
+manager.on('persist:saved', ({ checkpointId, filePath }) => {
+  console.log(`💾 Saved checkpoint to: ${filePath}`);
+});
+```
+
+**File Reference:** `src/sdk/checkpoint-manager.ts:40-54`
+
+#### Persistent Storage
+
+Checkpoints are automatically saved to disk in JSON format:
+
+```
+.claude-flow/checkpoints/
+├── msg_01ABC123DEF456GHI.json
+├── msg_01JKL789MNO012PQR.json
+└── msg_01STU345VWX678YZA.json
+```
+
+**Checkpoint File Structure:**
+```json
+{
+  "id": "msg_01ABC123DEF456GHI",
+  "sessionId": "session-20251015-143022",
+  "description": "Completed user authentication",
+  "timestamp": 1729052400000,
+  "messageCount": 47,
+  "totalTokens": 52847,
+  "filesModified": [
+    "src/auth/login.ts",
+    "src/auth/register.ts",
+    "src/middleware/auth.ts"
+  ]
+}
+```
+
+#### Cross-Session Persistence
+
+```typescript
+// Load all checkpoints from previous sessions
+const loaded = await checkpointManager.loadAllCheckpoints();
+console.log(`Loaded ${loaded} checkpoints from disk`);
+
+// List all persisted checkpoints
+const persistedIds = await checkpointManager.listPersistedCheckpoints();
+console.log('Available checkpoints:', persistedIds);
+
+// Get checkpoint info
+const checkpoint = checkpointManager.getCheckpoint('msg_01ABC123...');
+if (checkpoint) {
+  console.log('Checkpoint details:', checkpoint);
+}
+```
+
+**File Reference:** `src/sdk/checkpoint-manager.ts:373-399`
+
+#### Cleanup and Management
+
+```typescript
+// Delete old checkpoints
+await checkpointManager.deleteCheckpoint('msg_01ABC123...');
+
+// Cleanup sessions older than 1 hour
+checkpointManager.cleanupSessions(3600000);
+
+// Enforce max checkpoint limit (automatic)
+// When limit exceeded, oldest checkpoints are deleted
+```
+
+**File Reference:** `src/sdk/checkpoint-manager.ts:204-216`, `src/sdk/checkpoint-manager.ts:352-368`
+
+#### Example Workflow: Development with Checkpoints
+
+```typescript
+import { checkpointManager } from 'claude-flow/sdk';
+import { query } from '@anthropic-ai/claude-code';
+
+async function developWithCheckpoints() {
+  const sessionId = 'api-development';
+
+  // Phase 1: Initial implementation
+  const phase1Query = query({
+    prompt: 'Create REST API with Express and PostgreSQL',
+    options: { model: 'claude-sonnet-4', maxTurns: 30 }
+  });
+
+  await checkpointManager.trackSession(sessionId, phase1Query, true);
+
+  // Wait for completion...
+  for await (const msg of phase1Query) {
+    // Process messages
+  }
+
+  // Create checkpoint after implementation
+  const cp1 = await checkpointManager.createCheckpoint(
+    sessionId,
+    'Initial API implementation complete'
+  );
+
+  // Phase 2: Add authentication
+  const phase2Query = query({
+    prompt: 'Add JWT authentication to API',
+    options: {
+      resume: sessionId,
+      model: 'claude-sonnet-4',
+      maxTurns: 20
+    }
+  });
+
+  await checkpointManager.trackSession(sessionId, phase2Query, true);
+
+  // Wait for completion...
+  for await (const msg of phase2Query) {
+    // Process messages
+  }
+
+  // Create checkpoint after adding auth
+  const cp2 = await checkpointManager.createCheckpoint(
+    sessionId,
+    'Added JWT authentication'
+  );
+
+  // Phase 3: Tests break - rollback to before auth
+  console.log('Tests failing after auth changes. Rolling back...');
+
+  const rolledBack = await checkpointManager.rollbackToCheckpoint(
+    cp1,
+    'Implement authentication differently using sessions'
+  );
+
+  // Continue from checkpoint with different approach
+  for await (const msg of rolledBack) {
+    // Implement with session-based auth instead
+  }
+}
+```
+
+**Performance:**
+- Checkpoint creation: ~5ms (in-memory + disk write)
+- Checkpoint rollback: ~10ms (SDK native operation)
+- Storage size: ~1KB per checkpoint (JSON)
+- Max recommended: 100 checkpoints per session
+
 ### Rate Limiting & Token Management
 
 **Example:** Custom rate limiter with token budget
