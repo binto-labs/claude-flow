@@ -1,13 +1,14 @@
-name: 🔄 Automated Rollback Manager
+name: 🔄 Automated Rollback Manager (DISABLED - Documentation Fork)
 
-on:
-  workflow_run:
-    workflows: ["🔍 Verification Pipeline", "🎯 Truth Scoring Pipeline", "🔗 Cross-Agent Integration Tests"]
-    types: [completed]
-    branches: [main, develop]
-  push:
-    branches: [main]
-  workflow_dispatch:
+# Workflows disabled for documentation-only fork
+# on:
+#   workflow_run:
+#     workflows: ["🔍 Verification Pipeline", "🎯 Truth Scoring Pipeline", "🔗 Cross-Agent Integration Tests"]
+#     types: [completed]
+#     branches: [main, develop]
+#   push:
+#     branches: [main]
+#   workflow_dispatch:
     inputs:
       rollback_target:
         description: 'Target commit SHA or tag for rollback'

@@ -1,13 +1,14 @@
-name: 📊 Status Badges Update
+name: 📊 Status Badges Update (DISABLED - Documentation Fork)
 
-on:
-  workflow_run:
-    workflows: ["🔍 Verification Pipeline", "🎯 Truth Scoring Pipeline", "🔗 Cross-Agent Integration Tests"]
-    types: [completed]
-  push:
-    branches: [main]
-  schedule:
-    - cron: '0 6 * * *'  # Daily at 6 AM UTC
+# Workflows disabled for documentation-only fork
+# on:
+#   workflow_run:
+#     workflows: ["🔍 Verification Pipeline", "🎯 Truth Scoring Pipeline", "🔗 Cross-Agent Integration Tests"]
+#     types: [completed]
+#   push:
+#     branches: [main]
+#   schedule:
+#     - cron: '0 6 * * *'  # Daily at 6 AM UTC
 
 jobs:
   update-badges:

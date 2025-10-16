@@ -1,13 +1,14 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (DISABLED - Documentation Fork)
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    # Run tests daily at 2 AM UTC
-    - cron: '0 2 * * *'
+# Workflows disabled for documentation-only fork
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main ]
+#   schedule:
+#     # Run tests daily at 2 AM UTC
+#     - cron: '0 2 * * *'
 
 env:
   NODE_VERSION: '20'

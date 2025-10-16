@@ -1,11 +1,12 @@
-name: 🔍 Verification Pipeline
+name: 🔍 Verification Pipeline (DISABLED - Documentation Fork)
 
-on:
-  push:
-    branches: [main, develop, alpha-*]
-  pull_request:
-    branches: [main, develop]
-  workflow_dispatch:
+# Workflows disabled for documentation-only fork
+# on:
+#   push:
+#     branches: [main, develop, alpha-*]
+#   pull_request:
+#     branches: [main, develop]
+#   workflow_dispatch:
     inputs:
       verification_mode:
         description: 'Verification mode'

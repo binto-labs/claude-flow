@@ -1,12 +1,13 @@
-name: 🎯 Truth Scoring Pipeline
+name: 🎯 Truth Scoring Pipeline (DISABLED - Documentation Fork)
 
-on:
-  pull_request:
-    branches: [main, develop]
-    types: [opened, synchronize, reopened]
-  push:
-    branches: [main]
-  workflow_dispatch:
+# Workflows disabled for documentation-only fork
+# on:
+#   pull_request:
+#     branches: [main, develop]
+#     types: [opened, synchronize, reopened]
+#   push:
+#     branches: [main]
+#   workflow_dispatch:
     inputs:
       target_branch:
         description: 'Target branch for comparison'

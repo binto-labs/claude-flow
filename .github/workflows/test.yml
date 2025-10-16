@@ -1,10 +1,11 @@
-name: Test Suite
+name: Test Suite (DISABLED - Documentation Fork)
 
-on:
-  push:
-    branches: [ main, develop, claude-flow-v2.0.0 ]
-  pull_request:
-    branches: [ main, develop ]
+# Workflows disabled for documentation-only fork
+# on:
+#   push:
+#     branches: [ main, develop, claude-flow-v2.0.0 ]
+#   pull_request:
+#     branches: [ main, develop ]
 
 jobs:
   test:
