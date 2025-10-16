@@ -14,12 +14,12 @@
 - ✅ **Contribute Back** - Documentation improvements contributed upstream when possible
 
 **What's Here:**
-- 175+ documentation files (175 total markdown files)
-- Comprehensive technical references
-- SDK documentation with working examples
-- DevOps guides and benchmarking
-- Architecture Decision Records (ADRs)
-- Practical user guides
+- 39 fork-specific documentation files in `docs/binto-labs/`
+- 137 upstream documentation files (preserved as-is)
+- Total: 176 markdown files
+- Only customizations: Documentation + enhanced .gitignore
+
+**See:** [BINTO-LABS-DOC-INDEX.md](BINTO-LABS-DOC-INDEX.md) for navigation
 
 **Upstream Repository:** https://github.com/ruvnet/claude-flow
 **Fork Repository:** https://github.com/binto-labs/claude-flow
