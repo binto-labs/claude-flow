@@ -455,10 +455,24 @@ npx claude-flow@alpha swarm "Optimize API response time (currently 800ms, target
 
 ---
 
+## 🧠 Understanding ReasoningBank
+
+ReasoningBank is a **self-improving brain** for AI agents. Unlike basic key-value memory, it uses semantic search (understands meaning, not keywords), Bayesian confidence learning (gets smarter with each use), and pattern linking (builds knowledge graphs). Based on Google DeepMind's SAFLA algorithm, it transforms agents from stateless to persistently intelligent. Start with pre-trained models (11,000+ patterns), let SPARC use it automatically, and watch your system learn from every task—no training required.
+
+**Learn more:**
+- **[ReasoningBank Overview](../technical-reference/reasoning-bank-overview.md)** - Complete explanation of how it works
+- **[ReasoningBank Article](../technical-reference/reasoning-bank-fungible.md)** - Deep dive by the author
+- **[ReasoningBank Quick Start](../examples/reasoningbank-quickstart-examples.md)** - 5 practical examples
+
+**Technical references:**
+- **[ReasoningBank Integration](../technical-reference/REASONINGBANK-INTEGRATION.md)** - Neural network & WASM architecture
+- **[Architecture Details](../../integrations/reasoningbank/REASONINGBANK_ARCHITECTURE.md)** - System diagrams & data flow
+
+---
+
 ## 🎓 Next Steps: Learn More
 
 ### Feature Deep Dives (Layer 2)
-- **[ReasoningBank Quick Start](../examples/reasoningbank-quickstart-examples.md)** - Self-learning memory system with 5 complete examples
 - **[SPARC Methodology](../../reference/SPARC.md)** - Complete SPARC workflow documentation (upstream)
 - **[Hive-Mind Reference](./HIVE-MIND-REFERENCE.md)** - 112+ agent types, 4 topologies, complete CLI reference (upstream)
 
