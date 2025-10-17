@@ -14,6 +14,69 @@ This is your **fast-track to claude-flow mastery**. Instead of exploring every o
 
 ---
 
+## 💬 Two Ways to Use Claude-Flow
+
+### Option 1: Natural Language Prompts (Recommended for Claude Max users)
+
+If you have **Claude Max** (claude.ai subscription), you can use natural language prompts directly in Claude Code without needing an API key:
+
+**Example prompts:**
+```
+"Use claude-flow to spawn a SPARC swarm with development strategy and quality
+threshold 0.95 to build user authentication with JWT tokens"
+
+"Initialize a hive-mind swarm with mesh topology and 8 agents to build
+3 microservices: auth, payments, and notifications"
+
+"Run claude-flow in research mode to analyze GraphQL federation patterns"
+```
+
+**Why this works:** Claude Code (when used with Claude Max) has built-in access to execute `npx` commands and coordinate swarms automatically based on your natural language description.
+
+---
+
+### Option 2: Direct CLI Commands
+
+All examples in this guide show exact `npx` commands you can copy-paste. You can also run these directly in your terminal.
+
+**When to use CLI directly:**
+- You prefer explicit control
+- Building automation scripts
+- CI/CD integration
+- You're using Claude API (not Claude Max)
+
+---
+
+## 📚 Discovering All Options
+
+Before diving in, here's how to explore all available options:
+
+```bash
+# View all available SPARC modes
+npx claude-flow@alpha sparc modes
+# Shows: code, tdd, architect, debug, docs, review, refactor, integration,
+#        devops, security, optimize, ask (13 modes)
+
+# View all swarm options
+npx claude-flow@alpha swarm --help
+# Shows: strategies (research, development, testing, optimization, maintenance)
+#        modes (centralized, distributed, hierarchical, mesh, hybrid)
+#        all available flags and options
+
+# View all hive-mind options
+npx claude-flow@alpha hive-mind --help
+# Shows: subcommands (init, spawn, status, wizard, etc.)
+#        queen types, consensus algorithms, worker limits
+
+# General help
+npx claude-flow@alpha --help
+# Shows: all top-level commands and quick start guide
+```
+
+**Pro tip:** Use `--help` on any command to see its specific options and examples.
+
+---
+
 ## 🚀 Essential Setup (Do This First!)
 
 ### Step 1: Install Claude-Flow
@@ -85,7 +148,11 @@ npx claude-flow@alpha memory import frontend.json --reasoningbank
 
 ---
 
-### Step 4: Set Your API Key
+### Step 4: API Key Setup (Optional for Claude Max users)
+
+**If you have Claude Max:** You can skip this step! Claude Code (via claude.ai) provides API access automatically when you use natural language prompts.
+
+**If using CLI directly or Claude API:** You'll need an API key:
 
 ```bash
 # Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
@@ -96,6 +163,8 @@ echo "CLAUDE_API_KEY=your-api-key-here" > .env
 ```
 
 **Get your API key:** https://console.anthropic.com/
+
+> **Note:** The API key powers the AI agents that generate code, analyze requirements, and coordinate work. If using Claude Max with natural language prompts in Claude Code, the key is handled automatically.
 
 ---
 
