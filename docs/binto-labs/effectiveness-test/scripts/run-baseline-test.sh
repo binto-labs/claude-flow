@@ -14,8 +14,11 @@ START_TIME=$(date +%s)
 echo "⏱️  Start time: $(date)"
 echo ""
 
+# Get script directory to find requirements.md
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Copy requirements
-cp /tmp/test-requirements.md ./requirements.md
+cp "$SCRIPT_DIR/test-requirements.md" ./requirements.md
 
 echo "📋 Task: Build e-commerce checkout flow"
 echo ""

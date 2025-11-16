@@ -16,13 +16,16 @@ npx claude-flow@alpha init --force
 echo "✅ Clean memory databases initialized"
 echo ""
 
+# Get script directory to find requirements.md
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Record start time
 START_TIME=$(date +%s)
 echo "⏱️  Start time: $(date)"
 echo ""
 
 # Copy requirements
-cp /tmp/test-requirements.md ./requirements.md
+cp "$SCRIPT_DIR/test-requirements.md" ./requirements.md
 
 # Create agent instructions with 6-step protocol
 cat > agent-instructions.md << 'EOF'
