@@ -1,6 +1,20 @@
+---
+status: keep
+phase: complete
+type: reference
+version: 1.1
+last-updated: 2025-11-27
+title: Hive-Mind Templates
+author: Claude Code + Human Developer
+tags: [hive-mind, queen, workers, templates, coordination, phases]
+---
+
 # Hive-Mind Templates
 
 Complete guide for spawning Queen-coordinated hive-mind swarms.
+
+> **When to use hive-mind vs swarm:** See [workflow.md](./workflow.md) decision tree.
+> **For reference details:** See [claude-flow-guide.md](./claude-flow-guide.md) for architecture and commands.
 
 ---
 
@@ -28,17 +42,17 @@ Complete guide for spawning Queen-coordinated hive-mind swarms.
 **Step 1 - Generate Prompt:**
 
 ```
-Generate a hive-mind prompt for [OBJECTIVE] using @docs/multi-agent/HIVE-MIND-TEMPLATES.md
+Generate a hive-mind prompt for [OBJECTIVE] using ./hive-mind-templates.md
 ```
 
 **Step 2 - Review & Spawn:**
 
 ```
-Spawn this hive-mind using @docs/multi-agent/HIVE-MIND-TEMPLATES.md
+Spawn this hive-mind using ./hive-mind-templates.md
 ```
 
 **For full agent type list and command reference:**
-See @docs/multi-agent/CLAUDE-FLOW-GUIDE.md
+See ./claude-flow-guide.md
 
 ---
 
@@ -156,6 +170,7 @@ npx claude-flow@alpha memory read --namespace "hive/queen" --key "[YOUR-ASSIGNME
 # 3️⃣ EXECUTE your tasks:
 # [Specific work here]
 # Call post-edit hooks after each file
+# FOR ANY .md FILES: Add YAML frontmatter per document-classification-guide.md
 
 # 4️⃣ REPORT to Queen:
 npx claude-flow@alpha memory store \
@@ -268,6 +283,17 @@ npx claude-flow@alpha memory read --namespace "hive/[PROJECT]" --key "plan"
 After each file edit:
 npx claude-flow@alpha hooks post-edit --file "[file]"
 
+📋 FOR ANY .md FILES YOU CREATE:
+Add YAML frontmatter at the top:
+---
+status: keep
+phase: complete
+type: [spec|design|report|reference|guide]
+version: 1.0
+last-updated: [TODAY'S DATE]
+title: [Document Title]
+---
+
 4️⃣ REPORT to Queen:
 npx claude-flow@alpha memory store \
  --namespace "hive/[WORKER-ID]" \
@@ -311,6 +337,7 @@ QUALITY GATES:
 - TypeScript: 0 errors
 - Tests: 100% passing
 - ESLint: 0 errors
+- All .md files have YAML frontmatter (see document-classification-guide.md)
 
 ## Hive-Mind Structure
 
@@ -527,6 +554,87 @@ Is the task well-defined with clear phases?
 └─ NO  → Will scope likely change during execution?
          ├─ YES → Use Hive-Mind (Queen can adapt)
          └─ NO  → Use Regular Swarm
+```
+
+---
+
+---
+
+## Queen: Record Hive Outcome
+
+> **For full workflow:** See [workflow.md "Validation & Pattern Capture"](./workflow.md#validation--pattern-capture)
+
+After all phases complete and validation passes, Queen records outcomes:
+
+### Success Recording
+
+```bash
+# Record successful hive completion
+npx claude-flow@alpha memory feedback \
+  --pattern "hive/[NAMESPACE]/config" \
+  --outcome success \
+  --reasoningbank
+
+# Include metadata about what worked
+npx claude-flow@alpha memory store \
+  --namespace "hive/[NAMESPACE]" \
+  --key "learnings" \
+  --value '{
+    "phases_completed": 4,
+    "total_workers": 12,
+    "duration_hours": 8,
+    "key_decisions": [
+      "used hierarchical for phase 1",
+      "added security reviewer in phase 3",
+      "parallel workers for phase 2 research"
+    ],
+    "what_worked": "Breaking research into parallel tracks",
+    "what_to_improve": "Earlier type contract publishing"
+  }'
+```
+
+### Failure Pattern Capture
+
+If phases failed or required significant cleanup:
+
+```bash
+npx claude-flow@alpha memory store \
+  --namespace "code-quality/failure-patterns" \
+  --key "$(date +%Y%m%d)-hive-[brief-description]" \
+  --value '{
+    "hive_objective": "[what the hive was building]",
+    "failure_phase": "[which phase failed]",
+    "failure_category": "[coordination|types|tests|security|other]",
+    "specific_issue": "[what went wrong]",
+    "root_cause": "[why - was it Queen decision? worker execution? coordination?]",
+    "fix_applied": "[how you fixed it]",
+    "prevention": "[how to prevent: prompt change? phase structure? worker types?]"
+  }'
+```
+
+### Add to Queen Protocol
+
+Include in Queen's completion phase:
+
+```markdown
+7️⃣ RECORD OUTCOME (after successful validation):
+
+# Record hive completion
+npx claude-flow@alpha memory feedback \
+  --pattern "hive/[NAMESPACE]/config" \
+  --outcome success \
+  --reasoningbank
+
+# Store learnings for future hives
+npx claude-flow@alpha memory store \
+  --namespace "hive/[NAMESPACE]" \
+  --key "learnings" \
+  --value "{
+    phases: [phases completed],
+    workers: [total spawned],
+    key_decisions: [what worked],
+    improvements: [what to do better]
+  }"
 ```
 
 ---

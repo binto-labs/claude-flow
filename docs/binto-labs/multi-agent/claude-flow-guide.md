@@ -1,12 +1,30 @@
-# 🌊 Claude-Flow Complete Guide
+---
+status: keep
+phase: complete
+type: reference
+version: 2.7.1
+last-updated: 2025-11-27
+title: Claude-Flow Reference Guide
+author: Claude Code + Human Developer
+tags: [claude-flow, reference, architecture, commands, agents, memory]
+---
 
-**Version**: 2.7.0-alpha.10 | **Last Updated**: 2025-11-16
+# 🌊 Claude-Flow Reference Guide
+
+**Version**: 2.7.0-alpha.10 | **Last Updated**: 2025-11-27
+
+> **This is a reference manual.** For workflow guidance and decision trees,
+> see [workflow.md](./workflow.md).
+
+---
 
 > **Revolutionary AI Coordination**: Execute multi-agent swarms from Claude Code with intelligent coordination, persistent memory, and neural pattern learning.
 
 ---
 
 ## 📖 Table of Contents
+
+**Workflow & Decision Making** → See [workflow.md](./workflow.md)
 
 **Getting Started**
 
@@ -28,6 +46,11 @@
 
 - [E-Commerce Example](#e-commerce-example) - Complete checkout flow implementation
 - [Template-Based Execution](#template-based-execution) - Reusable task templates
+
+**Quality & Improvement**
+
+- [Code Quality Evals](#-code-quality-evals) - LLM + CI/CD analysis
+- [Continuous Improvement](#-continuous-improvement) - Pattern capture and learning
 
 **Reference**
 
@@ -67,8 +90,8 @@ npx claude-flow hive-mind spawn "Build e-commerce platform" --claude
 
 For spawning swarms with Claude Code's Task tool and guaranteed quality gates:
 
-- **Regular swarms** (3-6 agents, fixed plan): @docs/multi-agent/SWARM-TEMPLATES.md
-- **Queen-coordinated** (7+ agents, adaptive): @docs/multi-agent/HIVE-MIND-TEMPLATES.md
+- **Regular swarms** (3-6 agents, fixed plan): ./swarm-templates.md
+- **Queen-coordinated** (7+ agents, adaptive): ./hive-mind-templates.md
 
 These templates provide the 6-step coordination protocol and spawn patterns.
 
@@ -1096,31 +1119,31 @@ The following metrics have been **confirmed through testing**:
    **Regular Swarm** (3-6 agents, fixed plan):
 
    - Well-defined tasks with clear dependencies
-   - Use @docs/multi-agent/SWARM-TEMPLATES.md
+   - Use ./swarm-templates.md
 
    **Hive-Mind** (7+ agents, adaptive):
 
    - Complex tasks requiring runtime decisions
    - Queen coordinator spawns workers in phases
-   - Use @docs/multi-agent/HIVE-MIND-TEMPLATES.md
+   - Use ./hive-mind-templates.md
 
    **For topology decisions, agent types, and command reference:**
 
-   - See @docs/multi-agent/CLAUDE-FLOW-GUIDE.md
+   - See ./claude-flow-guide.md
 
    ### Two-Step Workflow
 
    **Step 1 - Generate Prompt:**
    ```
 
-   Generate a swarm prompt for [OBJECTIVE] using @docs/multi-agent/SWARM-TEMPLATES.md
+   Generate a swarm prompt for [OBJECTIVE] using ./swarm-templates.md
 
    ```
 
    **Step 2 - Review & Spawn:**
    ```
 
-   Spawn this swarm using @docs/multi-agent/SWARM-TEMPLATES.md
+   Spawn this swarm using ./swarm-templates.md
 
    ```
 
@@ -1131,6 +1154,199 @@ The following metrics have been **confirmed through testing**:
    npm install -g claude-flow@alpha
    npx claude-flow@alpha init --force
    ```
+
+[↑ Back to TOC](#-table-of-contents)
+
+---
+
+## 🔬 Code Quality Evals
+
+> **When to use:** After significant swarms to catch issues CI misses.
+> **For workflow guidance:** See [workflow.md "Code Quality Analysis"](./workflow.md#code-quality-analysis-optional)
+
+### What CI Misses
+
+Traditional CI (TypeScript, tests, lint) validates syntax and functionality. Code Quality Evals catch:
+
+| Category | What CI Catches | What Evals Catch |
+|----------|-----------------|------------------|
+| **Types** | Compilation errors | Type design quality, over-complexity |
+| **Tests** | Pass/fail | Meaningful assertions vs line-hitting |
+| **Coordination** | Nothing | Contract violations between agents |
+| **Security** | Nothing (usually) | Hardcoded secrets, input validation gaps |
+| **Maintainability** | Lint rules | Over-engineering, unclear naming |
+
+### LLM + CI/CD Acceleration
+
+Traditional error analysis requires reviewing 20+ outputs manually. LLM + CI/CD accelerates this:
+
+```
+Traditional (30+ min per swarm):
+  Human reviews code diff manually
+  Human reads through all files
+  Human categorizes issues
+  Human documents patterns
+
+Accelerated (5 min per swarm):
+  LLM analyzes: code diff + CI output + past patterns
+  LLM produces: categorized findings with confidence
+  Human validates: confirm/reject findings (5 min)
+  Confirmed findings → new patterns
+```
+
+### Code Quality Analyzer Agent
+
+Add this agent to significant swarms for automated quality analysis:
+
+```javascript
+Task('Code Quality Analyzer',
+  `You are a code quality analyzer.
+
+  INPUTS:
+  1. Code diff (git diff from this swarm)
+  2. CI output (TypeScript, test, lint results)
+  3. Past patterns: npx claude-flow@alpha memory list --namespace "code-quality/failure-patterns"
+
+  ANALYZE FOR:
+  - Coordination issues (did agents honor contracts? type mismatches?)
+  - Error handling (consistent patterns? meaningful messages?)
+  - Security (secrets? validation? injection risks?)
+  - Maintainability (over-engineering? unclear naming? magic numbers?)
+  - Test quality (meaningful assertions? edge cases? mocking patterns?)
+
+  OUTPUT FORMAT:
+  {
+    "findings": [
+      {
+        "category": "coordination|security|error-handling|maintainability|test-quality",
+        "severity": "high|medium|low",
+        "location": "file:line",
+        "issue": "what's wrong",
+        "suggestion": "how to fix",
+        "confidence": 0.0-1.0
+      }
+    ],
+    "summary": "Overall quality assessment",
+    "recommended_patterns": ["patterns to capture from this analysis"]
+  }
+
+  RULES:
+  - Only flag issues with confidence > 0.7
+  - Reference past patterns when relevant
+  - Don't duplicate what CI already caught
+  `,
+  'code-analyzer'
+);
+```
+
+### Human Review Process (5 minutes)
+
+After LLM analysis:
+
+1. **Review high-confidence findings** (> 0.8) - usually accurate
+2. **Validate medium-confidence** (0.7-0.8) - may need context
+3. **Skip low-confidence** (< 0.7) - too noisy
+4. **Confirm valid findings** → they become patterns
+5. **Reject false positives** → improves future analysis
+
+### Pattern Capture From Findings
+
+```bash
+# For each confirmed finding
+npx claude-flow@alpha memory store \
+  --namespace "code-quality/failure-patterns" \
+  --key "$(date +%Y%m%d)-[category]-[brief-description]" \
+  --value '{
+    "category": "[from finding]",
+    "pattern": "[generalized version of the issue]",
+    "detection": "[how to detect this in future]",
+    "prevention": "[how to prevent in prompts/templates]"
+  }'
+```
+
+[↑ Back to TOC](#-table-of-contents)
+
+---
+
+## 🧠 Continuous Improvement
+
+> **For workflow integration:** See [workflow.md "Continuous Improvement"](./workflow.md#continuous-improvement)
+
+### Recording Outcomes
+
+Every swarm generates learnings. Record outcomes automatically to enable:
+
+- **Confidence accumulation** - Successful patterns gain confidence over time
+- **Failure avoidance** - Failed approaches deprioritized in future queries
+- **Configuration optimization** - Learn which agent types work best together
+
+```bash
+# After successful swarm completion
+npx claude-flow@alpha memory feedback \
+  --pattern "swarm/[PROJECT]/config" \
+  --outcome success \
+  --reasoningbank
+# Confidence: 0.87 → 0.90 (+20% adjustment)
+
+# After failed swarm
+npx claude-flow@alpha memory feedback \
+  --pattern "swarm/[PROJECT]/config" \
+  --outcome failure \
+  --reasoningbank
+# Confidence: 0.87 → 0.74 (-15% adjustment)
+```
+
+### Weekly: Train Neural Patterns
+
+After accumulating 10+ swarms, train the neural module:
+
+```bash
+# Export swarm history
+npx claude-flow@alpha memory export swarm-history.json \
+  --namespace "swarm/*" \
+  --since "7d"
+
+# Train coordination patterns
+npx claude-flow@alpha neural train \
+  --data ./swarm-history.json \
+  --pattern_type "coordination"
+
+# Verify training
+npx claude-flow@alpha neural status
+```
+
+**What this enables:**
+- Anomaly detection (flag unusual agent behavior)
+- Complexity prediction (estimate swarm duration)
+- Routing optimization (match tasks to best agent types)
+
+### Monthly: Review Pattern Confidence
+
+```bash
+# List patterns by confidence
+npx claude-flow@alpha memory list --namespace "patterns" --sort confidence
+
+# Prune low-confidence patterns (optional)
+npx claude-flow@alpha memory prune --confidence-below 0.3
+```
+
+### The Feedback Loop
+
+```
+Swarm produces code
+    ↓
+CI fails (or Code Quality Analyzer flags issues)
+    ↓
+Cleanup fixes issues
+    ↓
+Pattern captured: "What went wrong and why"
+    ↓
+Pattern informs future swarm prompts
+    ↓
+Next swarm has fewer issues
+    ↓
+Repeat → Continuous improvement
+```
 
 [↑ Back to TOC](#-table-of-contents)
 

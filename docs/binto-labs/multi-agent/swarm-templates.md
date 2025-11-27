@@ -1,6 +1,20 @@
+---
+status: keep
+phase: complete
+type: reference
+version: 1.1
+last-updated: 2025-11-27
+title: Swarm Templates
+author: Claude Code + Human Developer
+tags: [swarm, templates, agents, coordination, cleanup, patterns]
+---
+
 # Swarm Templates
 
 Complete guide for spawning coordinated swarms with quality gates.
+
+> **When to use these templates:** See [workflow.md](./workflow.md) for decision guidance.
+> **For reference details:** See [claude-flow-guide.md](./claude-flow-guide.md) for architecture and commands.
 
 ---
 
@@ -22,17 +36,17 @@ Use swarms for **complex tasks requiring 3+ specialized agents** working in coor
 **Step 1 - Generate Prompt:**
 
 ```
-Generate a swarm prompt for [OBJECTIVE] using @docs/multi-agent/SWARM-TEMPLATES.md
+Generate a swarm prompt for [OBJECTIVE] using ./swarm-templates.md
 ```
 
 **Step 2 - Review & Spawn:**
 
 ```
-Spawn this swarm using @docs/multi-agent/SWARM-TEMPLATES.md
+Spawn this swarm using ./swarm-templates.md
 ```
 
 **For topology decisions, agent types, and command options:**
-See @docs/multi-agent/CLAUDE-FLOW-GUIDE.md
+See ./claude-flow-guide.md
 
 ---
 
@@ -59,8 +73,16 @@ npx claude-flow@alpha memory read --namespace "swarm/[PROJECT]" --key "plan" || 
 # 4️⃣ AFTER EVERY file you create/edit:
 npx claude-flow@alpha hooks post-edit --file "[FILE-PATH]" --memory-key "swarm/[AGENT]/progress"
 
-# 📋 FOR DOCUMENTATION FILES: Add YAML frontmatter per @docs/DOCUMENT-CLASSIFICATION-GUIDE.md
-# All .md files MUST have header: status, phase, type, version, last-updated, title
+# 📋 FOR DOCUMENTATION FILES: Add YAML frontmatter per ./document-classification-guide.md
+# All .md files MUST have this header:
+# ---
+# status: keep | working | temp | archive
+# phase: planning | development | complete | deprecated
+# type: spec | design | report | reference | guide | analysis
+# version: 1.0
+# last-updated: YYYY-MM-DD
+# title: Document Title
+# ---
 
 # 5️⃣ PUBLISH results for other agents:
 npx claude-flow@alpha memory store \
@@ -115,6 +137,17 @@ done
 4️⃣ AFTER EVERY file you edit:
 npx claude-flow@alpha hooks post-edit --file "[file-path]" --memory-key "swarm/[agent]/progress"
 
+📋 FOR ANY .md FILES YOU CREATE:
+Add YAML frontmatter at the top:
+---
+status: keep
+phase: complete
+type: [spec|design|report|reference|guide]
+version: 1.0
+last-updated: [TODAY'S DATE]
+title: [Document Title]
+---
+
 5️⃣ PUBLISH results:
 npx claude-flow@alpha memory store \
  --namespace "swarm/[AGENT-NAME]" \
@@ -157,6 +190,7 @@ Use this format when generating complete swarm prompts.
 - TypeScript: 0 errors
 - Tests: 100% passing
 - ESLint: 0 errors
+- All .md files have YAML frontmatter (see document-classification-guide.md)
 - [Project-specific gates]
 
 ## Agents Required
@@ -595,6 +629,209 @@ fi
 - Prefer simplicity → Use Strategy A instead
 
 **Default recommendation**: Start with Strategy A. Add Strategy C only when you actually experience the need for parallel validation.
+
+---
+
+---
+
+## Post-Swarm: Cleanup Protocol
+
+> **For triage decision tree:** See [workflow.md "Post-Swarm Triage"](./workflow.md#post-swarm-triage)
+
+After swarm completes, most will have some CI failures. This is normal.
+
+### Triage First
+
+```bash
+# Check what failed
+npm run type-check   # TypeScript
+npm test             # Tests
+npm run lint         # Lint
+```
+
+### Cleanup Agent Templates
+
+#### TypeScript Fixer
+
+```javascript
+Task('TypeScript Fixer',
+  `You are a focused cleanup agent.
+
+  🎯 YOUR ONLY JOB: Fix these TypeScript errors
+
+  ISSUES TO FIX:
+  [Paste TypeScript errors here]
+
+  RULES:
+  - Fix ONLY these TypeScript errors
+  - Don't refactor or "improve" other code
+  - Preserve existing logic
+  - Add types, don't use 'any'
+
+  WHEN DONE:
+  npm run type-check  # Must exit 0
+  npx claude-flow@alpha hooks post-task --task-id "typescript-fixer"
+  `,
+  'coder'
+);
+```
+
+#### Test Fixer
+
+```javascript
+Task('Test Fixer',
+  `You are a focused cleanup agent.
+
+  🎯 YOUR ONLY JOB: Fix these test failures
+
+  FAILING TESTS:
+  [Paste test failures here]
+
+  RULES:
+  - Fix ONLY these failing tests
+  - Update test expectations if implementation is correct
+  - Fix implementation if test expectation is correct
+  - Don't add new tests (unless needed for the fix)
+
+  WHEN DONE:
+  npm test  # Must exit 0
+  npx claude-flow@alpha hooks post-task --task-id "test-fixer"
+  `,
+  'tester'
+);
+```
+
+#### Coverage Fixer
+
+```javascript
+Task('Coverage Fixer',
+  `You are a focused cleanup agent.
+
+  🎯 YOUR ONLY JOB: Increase test coverage
+
+  COVERAGE GAPS:
+  [Paste coverage report here]
+
+  TARGET: 90% coverage
+
+  RULES:
+  - Add tests for uncovered lines
+  - Focus on meaningful tests, not line-hitting
+  - Test edge cases and error paths
+  - Don't modify implementation code
+
+  WHEN DONE:
+  npm test -- --coverage  # Must show 90%+ coverage
+  npx claude-flow@alpha hooks post-task --task-id "coverage-fixer"
+  `,
+  'tester'
+);
+```
+
+#### Lint Fixer
+
+```javascript
+Task('Lint Fixer',
+  `You are a focused cleanup agent.
+
+  🎯 YOUR ONLY JOB: Fix these lint errors
+
+  LINT ERRORS:
+  [Paste lint errors here]
+
+  FIRST TRY AUTO-FIX:
+  npm run lint -- --fix
+
+  THEN FIX REMAINING MANUALLY:
+  - Fix ONLY lint issues
+  - Don't refactor other code
+
+  WHEN DONE:
+  npm run lint  # Must exit 0
+  npx claude-flow@alpha hooks post-task --task-id "lint-fixer"
+  `,
+  'coder'
+);
+```
+
+### Mini-Swarm Coordination Pattern
+
+**Use when:** Type changes require test updates (interconnected failures)
+
+```javascript
+// Spawn in ONE message for coordination
+[
+  Task('Type Aligner',
+    `Fix TypeScript errors. After fixing, publish interface changes:
+
+    npx claude-flow@alpha memory store \\
+      --namespace "cleanup/types" \\
+      --key "changes" \\
+      --value "[describe what interfaces/types changed]"
+
+    ISSUES TO FIX:
+    [Paste TypeScript errors]
+    `,
+    'coder'
+  ),
+  Task('Test Updater',
+    `Wait for type changes, then update tests:
+
+    # Wait for Type Aligner
+    while ! npx claude-flow@alpha memory read \\
+      --namespace "cleanup/types" \\
+      --key "changes"; do
+      echo "Waiting for type changes..."
+      sleep 5
+    done
+
+    # Read what changed
+    npx claude-flow@alpha memory read \\
+      --namespace "cleanup/types" \\
+      --key "changes"
+
+    # Update tests to match type changes
+    [Paste test failures here]
+    `,
+    'tester'
+  )
+]
+```
+
+### Pattern Capture (After Cleanup)
+
+> **Critical:** Capturing failure patterns enables continuous improvement.
+
+```bash
+npx claude-flow@alpha memory store \
+  --namespace "code-quality/failure-patterns" \
+  --key "$(date +%Y%m%d)-[brief-description]" \
+  --value '{
+    "swarm_objective": "[what you were building]",
+    "failure_category": "[coordination|types|tests|security|other]",
+    "specific_issue": "[what went wrong]",
+    "root_cause": "[why it happened]",
+    "fix_applied": "[how you fixed it]",
+    "prevention": "[how to prevent next time]"
+  }'
+```
+
+### Outcome Recording (After Success)
+
+Add to Reviewer agent or run manually after swarm succeeds:
+
+```bash
+# Record successful swarm completion
+npx claude-flow@alpha memory feedback \
+  --pattern "swarm/[PROJECT]/config" \
+  --outcome success \
+  --reasoningbank
+
+# This enables:
+# - Bayesian confidence updates on this approach
+# - Future swarms prioritize high-confidence patterns
+# - System learns which agent configurations work best
+```
 
 ---
 
