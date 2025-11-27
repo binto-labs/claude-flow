@@ -1,0 +1,606 @@
+# Swarm Templates
+
+Complete guide for spawning coordinated swarms with quality gates.
+
+---
+
+## Quick Reference
+
+### When to Use Swarms
+
+Use swarms for **complex tasks requiring 3+ specialized agents** working in coordination:
+
+- Multi-component features (backend + frontend + tests + docs)
+- Large refactors across many files
+- Full-stack implementations
+- CI/CD fixes requiring multiple specialists
+
+**Don't use swarms** for simple tasks one agent can handle.
+
+### Two-Step Workflow
+
+**Step 1 - Generate Prompt:**
+
+```
+Generate a swarm prompt for [OBJECTIVE] using @docs/multi-agent/SWARM-TEMPLATES.md
+```
+
+**Step 2 - Review & Spawn:**
+
+```
+Spawn this swarm using @docs/multi-agent/SWARM-TEMPLATES.md
+```
+
+**For topology decisions, agent types, and command options:**
+See @docs/multi-agent/CLAUDE-FLOW-GUIDE.md
+
+---
+
+## The 6-Step Coordination Protocol
+
+**CRITICAL**: Every agent spawned via Claude Code's Task tool MUST execute these steps.
+
+```bash
+# ═══════════════════════════════════════════════════════════════
+# 6-STEP PROTOCOL - COPY INTO EVERY AGENT PROMPT
+# ═══════════════════════════════════════════════════════════════
+
+# 1️⃣ BEFORE starting ANY work:
+npx claude-flow@alpha hooks pre-task --description "[AGENT-ROLE] work"
+npx claude-flow@alpha hooks session-restore --session-id "swarm-[PROJECT-NAME]"
+
+# 2️⃣ READ context from swarm memory:
+npx claude-flow@alpha memory read --namespace "swarm/[PROJECT]" --key "plan" || true
+# Also read any dependency keys you're waiting for
+
+# 3️⃣ YOUR TASKS:
+# [List specific, measurable tasks here]
+
+# 4️⃣ AFTER EVERY file you create/edit:
+npx claude-flow@alpha hooks post-edit --file "[FILE-PATH]" --memory-key "swarm/[AGENT]/progress"
+
+# 📋 FOR DOCUMENTATION FILES: Add YAML frontmatter per @docs/DOCUMENT-CLASSIFICATION-GUIDE.md
+# All .md files MUST have header: status, phase, type, version, last-updated, title
+
+# 5️⃣ PUBLISH results for other agents:
+npx claude-flow@alpha memory store \
+  --namespace "swarm/[AGENT-NAME]" \
+  --key "[DELIVERABLE-NAME]" \
+  --value "[RESULT-OR-FILE-CONTENT]"
+
+# 🚨 CRITICAL: If you make architectural decisions, PUBLISH them:
+# Examples of decisions to publish:
+# - API design choices (class vs function, REST vs GraphQL)
+# - File structure changes (moved files, renamed modules)
+# - Breaking changes (changed function signatures, renamed types)
+# - Technology choices (switched libraries, changed frameworks)
+
+# 6️⃣ AFTER completing ALL tasks:
+npx claude-flow@alpha hooks post-task --task-id "[AGENT-ROLE]"
+npx claude-flow@alpha hooks session-end --export-metrics true
+```
+
+---
+
+## Agent Spawn Template
+
+Use this template when spawning agents with Claude Code's Task tool.
+
+```markdown
+You are the [AGENT-NAME] agent for [PROJECT-NAME] swarm.
+
+🔧 COORDINATION PROTOCOL (CRITICAL - EXECUTE EVERY STEP):
+
+1️⃣ BEFORE starting ANY work:
+npx claude-flow@alpha hooks pre-task --description "[AGENT-ROLE] work"
+npx claude-flow@alpha hooks session-restore --session-id "swarm-[PROJECT]"
+
+2️⃣ READ context:
+[For first agent]: Read design doc or requirements
+[For dependent agents]: Wait for dependency:
+while ! npx claude-flow@alpha memory read \
+ --namespace "swarm/[DEPENDENCY-AGENT]" \
+ --key "[DEPENDENCY-KEY]"; do
+echo "Waiting for [dependency]..."
+sleep 10
+done
+
+3️⃣ YOUR TASKS:
+
+- [Specific task 1]
+- [Specific task 2]
+- [Specific task 3]
+- Run tests: npm test -- [test-pattern]
+
+4️⃣ AFTER EVERY file you edit:
+npx claude-flow@alpha hooks post-edit --file "[file-path]" --memory-key "swarm/[agent]/progress"
+
+5️⃣ PUBLISH results:
+npx claude-flow@alpha memory store \
+ --namespace "swarm/[AGENT-NAME]" \
+ --key "[DELIVERABLE]" \
+ --value "[RESULT]"
+
+6️⃣ AFTER completing ALL tasks:
+npx claude-flow@alpha hooks post-task --task-id "[AGENT-ROLE]"
+npx claude-flow@alpha hooks session-end --export-metrics true
+
+QUALITY GATES (hooks will enforce):
+
+- TypeScript: 0 errors allowed
+- Tests: Must pass before proceeding
+- ESLint: 0 errors allowed
+- No @ts-nocheck, no @ts-ignore, no ': any' types
+```
+
+---
+
+## Prompt Generation Template
+
+Use this format when generating complete swarm prompts.
+
+```markdown
+# Swarm Objective: [OBJECTIVE]
+
+## Context
+
+[Brief description of current state and why swarm is needed]
+
+## Requirements
+
+- [Requirement 1]
+- [Requirement 2]
+- [Requirement 3]
+
+## Quality Gates (MANDATORY)
+
+- TypeScript: 0 errors
+- Tests: 100% passing
+- ESLint: 0 errors
+- [Project-specific gates]
+
+## Agents Required
+
+### Agent 1: [Role] ([agent-type])
+
+**Tasks:**
+
+- [Task 1]
+- [Task 2]
+- [Task 3]
+
+**Publishes to Memory:**
+
+- `swarm/[agent]/[key-1]` - [Description]
+
+**Dependencies:**
+
+- None (or list what to wait for)
+
+**Coordination Protocol:**
+[Full 6-step protocol here]
+
+---
+
+### Agent 2: [Next Role] ([agent-type])
+
+[Same structure...]
+
+---
+
+## Success Criteria
+
+- [ ] All agents complete
+- [ ] All quality gates pass
+- [ ] All deliverables in memory
+```
+
+---
+
+## Common Agent Configurations
+
+### Architect Agent
+
+```javascript
+Task(
+  'Architecture Design',
+  `
+You are the architect agent for [PROJECT] swarm.
+
+[FULL 6-STEP PROTOCOL HERE]
+
+YOUR TASKS:
+- Design system architecture
+- Define interfaces and contracts
+- Create directory structure
+- Write architecture README
+
+PUBLISHES:
+- swarm/architect/interfaces
+- swarm/architect/complete
+`,
+  'system-architect'
+);
+```
+
+### Coder Agent (with dependency)
+
+```javascript
+Task(
+  'Feature Implementation',
+  `
+You are the coder agent for [PROJECT] swarm.
+
+[FULL 6-STEP PROTOCOL HERE]
+
+WAIT FOR:
+while ! npx claude-flow@alpha memory read \
+  --namespace "swarm/architect" \
+  --key "interfaces"; do
+  sleep 10
+done
+
+YOUR TASKS:
+- Implement feature based on interfaces
+- Write unit tests (London School TDD)
+- Ensure 0 TypeScript errors
+
+PUBLISHES:
+- swarm/coder/implementation-complete
+`,
+  'coder'
+);
+```
+
+### Tester Agent
+
+```javascript
+Task(
+  'Test Suite',
+  `
+You are the tester agent for [PROJECT] swarm.
+
+[FULL 6-STEP PROTOCOL HERE]
+
+WAIT FOR:
+while ! npx claude-flow@alpha memory read \
+  --namespace "swarm/coder" \
+  --key "implementation-complete"; do
+  sleep 10
+done
+
+YOUR TASKS:
+- Write comprehensive tests
+- Achieve 90%+ coverage
+- Run full test suite
+
+PUBLISHES:
+- swarm/tester/tests-passing
+`,
+  'tester'
+);
+```
+
+### Reviewer/Validator Agent
+
+```javascript
+Task(
+  'Final Validation',
+  `
+You are the reviewer agent for [PROJECT] swarm.
+
+[FULL 6-STEP PROTOCOL HERE]
+
+WAIT FOR ALL:
+while ! npx claude-flow@alpha memory read --namespace "swarm/architect" --key "complete"; do sleep 10; done
+while ! npx claude-flow@alpha memory read --namespace "swarm/coder" --key "implementation-complete"; do sleep 10; done
+while ! npx claude-flow@alpha memory read --namespace "swarm/tester" --key "tests-passing"; do sleep 10; done
+
+YOUR TASKS:
+- Run FULL validation: ../../scripts/validate.sh
+- Exit code MUST be 0 (all checks pass)
+- If validation fails:
+  * Report which checks failed
+  * DO NOT commit
+  * Exit with error
+- If validation passes:
+  * Create validation report
+  * Commit changes with message
+
+PUBLISHES:
+- swarm/reviewer/validation-result
+- swarm/reviewer/ci-green (only if passed)
+`,
+  'reviewer'
+);
+```
+
+---
+
+## Spawning Pattern
+
+**CRITICAL**: Spawn ALL agents in a SINGLE message for parallel execution.
+
+```javascript
+// In one message, call Task() for all agents:
+[
+  Task('Architect', '[full prompt]', 'system-architect'),
+  Task('Backend', '[full prompt]', 'coder'),
+  Task('Tester', '[full prompt]', 'tester'),
+  Task('Reviewer', '[full prompt]', 'reviewer'),
+];
+
+// Also batch TodoWrite:
+TodoWrite([
+  { content: 'Design architecture', status: 'in_progress', activeForm: 'Designing' },
+  { content: 'Implement feature', status: 'pending', activeForm: 'Implementing' },
+  { content: 'Write tests', status: 'pending', activeForm: 'Writing tests' },
+  { content: 'Validate and commit', status: 'pending', activeForm: 'Validating' },
+]);
+```
+
+---
+
+## Validation Strategy
+
+**Goal**: Prevent "passes locally but fails CI" issues.
+
+### The Scripts
+
+**`scripts/validate.sh`** - Full validation matching CI exactly:
+
+- TypeScript type checking (0 errors)
+- ESLint (0 errors)
+- Prettier format check
+- Full test suite (100% passing)
+
+**`scripts/test.sh`** - Flexible scoped testing:
+
+- `--package engine` - Test specific package
+- `--lint --type --test` - Choose specific checks
+- `--fix` - Auto-fix issues
+- Useful during development, not for final validation
+
+### Strategy A: Single Reviewer Pattern (DEFAULT)
+
+**Use when**: Small swarms (2-4 agents), single package, or simplicity preferred
+
+**How it works**:
+
+- Individual agents: Focus on their work, don't run full validation
+- Final Reviewer agent: Runs `../../scripts/validate.sh` after all agents complete
+- ✅ No conflicts (serial execution)
+- ✅ Simple coordination
+- ⚠️ Agents don't get immediate feedback
+
+**Example**: See "Reviewer/Validator Agent" template above
+
+### When to Use Advanced Patterns
+
+**If you have**:
+
+- Large swarms (5+ agents)
+- Agents want immediate validation feedback
+- Single package (can't use scoped validation)
+
+**Then consider**: Strategy C (Validation Lock) - See "Advanced Patterns" section below
+
+---
+
+## Common Agent Types
+
+| Type               | Use For                       |
+| ------------------ | ----------------------------- |
+| `system-architect` | Design, structure, interfaces |
+| `coder`            | Implementation, features      |
+| `tester`           | Test suites, coverage         |
+| `reviewer`         | Validation, QA, commits       |
+| `researcher`       | Analysis, investigation       |
+| `backend-dev`      | API, database work            |
+
+---
+
+## Verification
+
+After swarm completes:
+
+```bash
+# Check memory coordination
+npx claude-flow@alpha memory list --namespace "swarm/*"
+
+# Check quality gates
+npm run type-check && npm test && npm run lint
+
+# Check hook logs
+ls -la .swarm/hooks/*/logs/
+```
+
+---
+
+## Troubleshooting
+
+**Agents not waiting?** Add wait loop to prompt.
+**Hooks not running?** Check `.claude/settings.json`.
+**Quality bypassed?** Ensure 6-step protocol in every agent.
+
+---
+
+## Advanced Patterns
+
+**Most projects should use Strategy A (Single Reviewer).** These patterns are for specific scenarios.
+
+### Decision Tree
+
+```
+Do you have multiple packages (backend, frontend, mobile)?
+├─ YES → Use Strategy B (Scoped Validation)
+│         Each agent validates their package in parallel
+│
+└─ NO (single package)
+    │
+    ├─ Small swarm (2-4 agents)?
+    │  └─ YES → Use Strategy A (Single Reviewer) ✅ RECOMMENDED
+    │           Simple, no conflicts
+    │
+    └─ Large swarm (5+ agents) AND need immediate feedback?
+       └─ YES → Use Strategy C (Validation Lock)
+                More complex, but agents validate during work
+```
+
+---
+
+### Strategy B: Scoped Validation (Multi-Package Monorepos)
+
+**Use when**:
+
+- Multi-package monorepo (backend + frontend + mobile + shared libs)
+- Each agent works on a different package
+- Want parallel validation without conflicts
+
+**How it works**:
+
+- Each agent validates ONLY their package using scoped commands
+- No conflicts because different packages = different directories
+- Final Reviewer still runs full `validate.sh`
+
+**Example**:
+
+```javascript
+Task(
+  'Backend Developer',
+  `
+YOUR TASKS:
+- Implement API endpoints
+- After work: ../../scripts/test.sh --package backend --all
+- Exit code MUST be 0 before reporting done
+`,
+  'backend-dev'
+);
+
+Task(
+  'Frontend Developer',
+  `
+YOUR TASKS:
+- Implement UI components
+- After work: ../../scripts/test.sh --package frontend --all
+- Exit code MUST be 0 before reporting done
+`,
+  'coder'
+);
+
+Task(
+  'Reviewer',
+  `
+WAIT FOR ALL agents to complete
+YOUR TASKS:
+- Run FULL validation: ../../scripts/validate.sh (all packages)
+- Commit if passed
+`,
+  'reviewer'
+);
+```
+
+**Pros**:
+
+- ✅ No conflicts (different directories)
+- ✅ Fast parallel validation
+- ✅ Agents get immediate feedback
+
+**Cons**:
+
+- ❌ Only works with multiple packages
+- ❌ Current project has 1 package (game-engine only)
+
+---
+
+### Strategy C: Validation Lock (The "Roll-Cage")
+
+**⚠️ ADVANCED**: Use only when you need parallel agents to validate during their work.
+
+**Use when**:
+
+- Large swarms (5+ agents working in parallel)
+- Single package (can't use scoped validation)
+- Agents need immediate validation feedback (not willing to wait for final Reviewer)
+
+**The Problem**: Multiple agents running `../../scripts/validate.sh` simultaneously causes conflicts:
+
+- Test cache directories (`.vitest/`)
+- Coverage reports (`coverage/`)
+- Temp files
+
+**The Solution**: Validation Lock - ensures only ONE agent validates at a time.
+
+#### Implementation
+
+**Add to each agent's task list**:
+
+```bash
+# After completing your work, BEFORE reporting done:
+
+# 1. Acquire validation lock (wait if someone else has it)
+echo "Acquiring validation lock..."
+while ! npx claude-flow@alpha memory store \
+  --namespace "swarm/validation" \
+  --key "lock" \
+  --value "[AGENT-ID]" \
+  --ttl 600; do
+  echo "Waiting for validation lock (another agent validating)..."
+  sleep 10
+done
+
+# 2. Run full validation
+echo "Running validation (lock acquired)..."
+../../scripts/validate.sh
+VALIDATION_RESULT=$?
+
+# 3. Release lock
+npx claude-flow@alpha memory delete \
+  --namespace "swarm/validation" \
+  --key "lock"
+
+# 4. Check result
+if [ $VALIDATION_RESULT -eq 0 ]; then
+  echo "✅ Validation passed!"
+  # Publish success
+  npx claude-flow@alpha memory store \
+    --namespace "swarm/[AGENT-ID]" \
+    --key "validation-passed" \
+    --value "true"
+else
+  echo "❌ Validation failed! Exit code: $VALIDATION_RESULT"
+  # DO NOT proceed, DO NOT commit
+  exit 1
+fi
+```
+
+#### Trade-offs
+
+**Pros**:
+
+- ✅ Agents get immediate feedback during work
+- ✅ No file conflicts (serialized validation)
+- ✅ Works with single package
+
+**Cons**:
+
+- ❌ More complex coordination
+- ❌ Agents wait for each other (serialized)
+- ❌ If lock expires (TTL 600s), another agent can take it
+
+#### When NOT to Use This
+
+- Small swarms (2-4 agents) → Use Strategy A instead
+- Multi-package monorepo → Use Strategy B (scoped validation) instead
+- Prefer simplicity → Use Strategy A instead
+
+**Default recommendation**: Start with Strategy A. Add Strategy C only when you actually experience the need for parallel validation.
+
+---
+
+## Adding to Your Project
+
+1. Copy the `/docs/multi-agent/` folder to your project
+2. See CLAUDE-FLOW-GUIDE.md "Project Setup" section for CLAUDE.md instructions
+
+**This file is self-contained. Copy to any project.**
