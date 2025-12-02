@@ -2,11 +2,11 @@
 status: keep
 phase: complete
 type: reference
-version: 1.1
-last-updated: 2025-11-27
+version: 1.2
+last-updated: 2025-12-02
 title: Swarm Templates
 author: Claude Code + Human Developer
-tags: [swarm, templates, agents, coordination, cleanup, patterns]
+tags: [swarm, templates, agents, coordination, cleanup, patterns, tdd-london, sparc]
 ---
 
 # Swarm Templates
@@ -189,6 +189,7 @@ Use this format when generating complete swarm prompts.
 
 - TypeScript: 0 errors
 - Tests: 100% passing
+- **TDD Compliance**: Tests written using London School approach (mocks, behavior verification)
 - ESLint: 0 errors
 - All .md files have YAML frontmatter (see document-classification-guide.md)
 - [Project-specific gates]
@@ -268,15 +269,23 @@ You are the coder agent for [PROJECT] swarm.
 [FULL 6-STEP PROTOCOL HERE]
 
 WAIT FOR:
-while ! npx claude-flow@alpha memory read \
-  --namespace "swarm/architect" \
+while ! npx claude-flow@alpha memory read \\
+  --namespace "swarm/architect" \\
   --key "interfaces"; do
   sleep 10
 done
 
+# Check for test contracts from tester agent (if available)
+npx claude-flow@alpha memory read \\
+  --namespace "swarm/tester" \\
+  --key "contracts" || true
+
 YOUR TASKS:
 - Implement feature based on interfaces
-- Write unit tests (London School TDD)
+- Write unit tests using London School TDD approach:
+  * Mock collaborators to isolate units
+  * Verify behavior/interactions, not just state
+  * Reference: .claude/agents/testing/unit/tdd-london-swarm.md
 - Ensure 0 TypeScript errors
 
 PUBLISHES:
@@ -286,7 +295,7 @@ PUBLISHES:
 );
 ```
 
-### Tester Agent
+### Tester Agent (London School TDD)
 
 ```javascript
 Task(
@@ -294,24 +303,41 @@ Task(
   `
 You are the tester agent for [PROJECT] swarm.
 
+🧪 TESTING METHODOLOGY: London School TDD
+Reference: .claude/agents/testing/unit/tdd-london-swarm.md
+
+Follow the London School approach:
+1. Write tests from OUTSIDE-IN (user behavior → implementation)
+2. Use MOCKS to define collaborator contracts
+3. Verify BEHAVIOR (how objects interact), not just state
+4. Share mock contracts with other agents via memory
+
 [FULL 6-STEP PROTOCOL HERE]
 
 WAIT FOR:
-while ! npx claude-flow@alpha memory read \
-  --namespace "swarm/coder" \
+while ! npx claude-flow@alpha memory read \\
+  --namespace "swarm/coder" \\
   --key "implementation-complete"; do
   sleep 10
 done
 
 YOUR TASKS:
-- Write comprehensive tests
+- Write tests BEFORE implementation where possible (true TDD)
+- Use mocks to isolate units and define contracts
 - Achieve 90%+ coverage
-- Run full test suite
+- Publish test contracts to swarm memory
+
+Mock Contract Format:
+npx claude-flow@alpha memory store \\
+  --namespace "swarm/tester" \\
+  --key "contracts" \\
+  --value '{"ServiceName": {"method": {"input": "type", "output": "type"}}}'
 
 PUBLISHES:
+- swarm/tester/contracts (mock definitions for other agents)
 - swarm/tester/tests-passing
 `,
-  'tester'
+  'tdd-london-swarm'
 );
 ```
 
@@ -427,10 +453,14 @@ TodoWrite([
 | ------------------ | ----------------------------- |
 | `system-architect` | Design, structure, interfaces |
 | `coder`            | Implementation, features      |
-| `tester`           | Test suites, coverage         |
+| `tdd-london-swarm` | Test suites with London School TDD (DEFAULT for testing) |
+| `tester`           | Generic testing (use `tdd-london-swarm` instead) |
 | `reviewer`         | Validation, QA, commits       |
 | `researcher`       | Analysis, investigation       |
 | `backend-dev`      | API, database work            |
+| `sparc-coord`      | SPARC methodology orchestration |
+
+> **Testing Default**: Use `tdd-london-swarm` for all testing agents. See `.claude/agents/testing/unit/tdd-london-swarm.md` for the full London School TDD methodology.
 
 ---
 

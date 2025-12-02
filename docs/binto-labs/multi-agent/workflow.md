@@ -2,11 +2,11 @@
 status: keep
 phase: complete
 type: guide
-version: 1.0
-last-updated: 2025-11-27
+version: 1.1
+last-updated: 2025-12-02
 title: Multi-Agent Workflow Guide
 author: Claude Code + Human Developer
-tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns]
+tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-london]
 ---
 
 # Multi-Agent Workflow Guide
@@ -30,6 +30,29 @@ tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns]
 ---
 
 ## Pre-Work: What Am I Building?
+
+### Default Methodology: SPARC
+
+All **development tasks** (code changes, features, fixes, refactors) should use or form part of the SPARC process. Scale the depth to match task complexity:
+
+| Task Type | SPARC Application |
+|-----------|-------------------|
+| Small fix (< 30 min) | Light spec → Implement → Verify |
+| Feature (2-4 hours) | Full 5-phase cycle, each phase sized appropriately |
+| Complex project | Full SPARC with formal quality gates between phases |
+| Research/analysis/questions | SPARC not required - use appropriate approach |
+
+**SPARC Phases (For Development Work):**
+1. **Specification**: What are we building? What does "done" look like?
+2. **Pseudocode**: How will the algorithm/logic work?
+3. **Architecture**: How do components fit together?
+4. **Refinement**: TDD implementation with iterative improvement
+5. **Completion**: Integration, docs, deployment prep
+
+**Available SPARC Agents:**
+- `sparc-coord` - Full phase orchestration (`.claude/agents/templates/sparc-coordinator.md`)
+- `specification`, `pseudocode`, `architecture`, `refinement` - Individual phases (`.claude/agents/sparc/`)
+- SPARC skill: Invoke with `@sparc-methodology` (`.claude/skills/sparc-methodology/SKILL.md`)
 
 ### Decision Tree: Task Complexity
 
@@ -551,6 +574,45 @@ npx claude-flow@alpha memory prune --confidence-below 0.3
 
 ---
 
+## Available Resources
+
+> Claude Code should consider these resources when forming swarms and selecting agents.
+
+### Specialized Agents
+
+Location: `.claude/agents/`
+
+| Category | Key Agents | Use For |
+|----------|------------|---------|
+| **SPARC** | `sparc-coord`, `specification`, `architecture`, `refinement` | Methodology orchestration |
+| **Testing** | `tdd-london-swarm`, `production-validator` | Quality assurance (London School TDD) |
+| **Coordination** | `hierarchical-coordinator`, `mesh-coordinator`, `adaptive-coordinator` | Swarm topology |
+| **GitHub** | `pr-manager`, `code-review-swarm`, `release-manager`, `issue-tracker` | Repository ops |
+| **Development** | `backend-dev`, `system-architect`, `api-docs`, `ml-developer` | Specialized implementation |
+| **Consensus** | `byzantine-coordinator`, `raft-manager`, `gossip-coordinator` | Distributed systems |
+
+### Skills (Invoke with `@skill-name`)
+
+Location: `.claude/skills/`
+
+| Skill | Purpose |
+|-------|---------|
+| `sparc-methodology` | Full SPARC development modes (17+ modes) |
+| `swarm-orchestration` | Multi-agent coordination patterns |
+| `verification-quality` | Truth scoring & automatic rollback |
+| `pair-programming` | Driver/navigator TDD sessions |
+| `hive-mind-advanced` | Queen-led collective intelligence |
+
+### Agent Discovery
+
+When forming a swarm, Claude Code should:
+1. Check `.claude/agents/` for specialized agents matching task needs
+2. Consider `.claude/skills/` for methodology guidance
+3. Default to SPARC phases for all development work
+4. Use `tdd-london-swarm` for testing (London School TDD is the default)
+
+---
+
 ## Related Documents
 
 | Document | Purpose | When to Use |
@@ -558,7 +620,8 @@ npx claude-flow@alpha memory prune --confidence-below 0.3
 | **[swarm-templates.md](./swarm-templates.md)** | Agent templates, 6-step protocol | Spawning agents, need copy-paste prompts |
 | **[hive-mind-templates.md](./hive-mind-templates.md)** | Queen coordination, multi-phase projects | Complex/uncertain scope tasks |
 | **[claude-flow-guide.md](./claude-flow-guide.md)** | Reference: architecture, commands, troubleshooting | "How does X work?" questions |
+| **[gap-analysis-wiring.md](./gap-analysis-wiring.md)** | SPARC & TDD London integration analysis | Understanding methodology wiring |
 
 ---
 
-**Version**: 1.0.0 | **Last Updated**: 2025-11-27
+**Version**: 1.1.0 | **Last Updated**: 2025-12-02
