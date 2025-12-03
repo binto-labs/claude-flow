@@ -2,8 +2,8 @@
 status: keep
 phase: complete
 type: reference
-version: 1.2
-last-updated: 2025-12-02
+version: 1.3
+last-updated: 2025-12-03
 title: Swarm Templates
 author: Claude Code + Human Developer
 tags: [swarm, templates, agents, coordination, cleanup, patterns, tdd-london, sparc]
@@ -244,14 +244,30 @@ You are the architect agent for [PROJECT] swarm.
 
 [FULL 6-STEP PROTOCOL HERE]
 
+# First, check existing architectural decisions for consistency
+npx claude-flow@alpha memory list --namespace "architecture/*"
+npx claude-flow@alpha memory read --namespace "architecture/decisions" --key "*" || true
+
 YOUR TASKS:
 - Design system architecture
 - Define interfaces and contracts
 - Create directory structure
 - Write architecture README
 
+CAPTURE DECISIONS (for future swarm consistency):
+npx claude-flow@alpha memory store \\
+  --namespace "architecture/decisions" \\
+  --key "[decision-name]" \\
+  --value "[decision + rationale]"
+
+npx claude-flow@alpha memory store \\
+  --namespace "architecture/patterns" \\
+  --key "[pattern-name]" \\
+  --value "[how applied in this project]"
+
 PUBLISHES:
 - swarm/architect/interfaces
+- swarm/architect/decisions (list of decisions stored)
 - swarm/architect/complete
 `,
   'system-architect'

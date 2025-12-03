@@ -2,8 +2,8 @@
 status: keep
 phase: complete
 type: guide
-version: 1.1
-last-updated: 2025-12-02
+version: 1.2
+last-updated: 2025-12-03
 title: Multi-Agent Workflow Guide
 author: Claude Code + Human Developer
 tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-london]
@@ -48,6 +48,44 @@ All **development tasks** (code changes, features, fixes, refactors) should use 
 3. **Architecture**: How do components fit together?
 4. **Refinement**: TDD implementation with iterative improvement
 5. **Completion**: Integration, docs, deployment prep
+
+### Capturing Architectural Decisions
+
+During SPARC phases (especially Architecture), **store decisions in project memory** for consistency across swarms:
+
+```bash
+# Store architectural decisions
+npx claude-flow@alpha memory store \
+  --namespace "architecture/decisions" \
+  --key "[decision-name]" \
+  --value "[decision and rationale]"
+
+# Store patterns adopted for this project
+npx claude-flow@alpha memory store \
+  --namespace "architecture/patterns" \
+  --key "[pattern-name]" \
+  --value "[how pattern is applied in this project]"
+```
+
+**What to capture:**
+- **API design choices**: REST vs GraphQL, authentication approach, versioning strategy
+- **Data patterns**: Database schema decisions, caching strategy, state management
+- **Code conventions**: Naming conventions, file structure, module boundaries
+- **Technology choices**: Libraries selected, frameworks, infrastructure decisions
+
+**Why this matters:**
+- Future swarms reference these decisions for consistency
+- Prevents re-debating settled architectural questions
+- New agents understand project context immediately
+- Builds institutional knowledge that persists
+
+**Example:**
+```bash
+npx claude-flow@alpha memory store \
+  --namespace "architecture/decisions" \
+  --key "auth-strategy" \
+  --value "JWT with refresh tokens. Access token TTL: 15min. Refresh: 7 days. Redis for session blacklist. Rationale: Stateless scaling, quick revocation capability."
+```
 
 **Available SPARC Agents:**
 - `sparc-coord` - Full phase orchestration (`.claude/agents/templates/sparc-coordinator.md`)
