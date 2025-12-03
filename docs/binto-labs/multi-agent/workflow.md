@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: guide
-version: 1.2
+version: 1.3
 last-updated: 2025-12-03
 title: Multi-Agent Workflow Guide
 author: Claude Code + Human Developer
@@ -86,6 +86,26 @@ npx claude-flow@alpha memory store \
   --key "auth-strategy" \
   --value "JWT with refresh tokens. Access token TTL: 15min. Refresh: 7 days. Redis for session blacklist. Rationale: Stateless scaling, quick revocation capability."
 ```
+
+### Design Principles Checklist
+
+Before finalizing architecture, explicitly consider these fundamentals. Not all apply to every task - but each should be consciously evaluated:
+
+- [ ] **Separation of Concerns**: Should responsibilities be isolated into distinct components?
+- [ ] **Modularity**: Can this be broken into independent, reusable units?
+- [ ] **Single Responsibility**: Does each component/function do one thing well?
+- [ ] **Testability**: Can components be tested in isolation?
+- [ ] **Loose Coupling**: Are dependencies minimized and explicit?
+
+**If deviating from a principle, document why:**
+```bash
+npx claude-flow@alpha memory store \
+  --namespace "architecture/decisions" \
+  --key "tight-coupling-rationale" \
+  --value "Components X and Y tightly coupled intentionally. Rationale: Performance-critical path, <1ms latency requirement. Trade-off accepted."
+```
+
+**When to skip:** For quick scripts, single-purpose utilities, or prototypes, a simple "N/A - single-purpose utility" acknowledgment is sufficient.
 
 **Available SPARC Agents:**
 - `sparc-coord` - Full phase orchestration (`.claude/agents/templates/sparc-coordinator.md`)
