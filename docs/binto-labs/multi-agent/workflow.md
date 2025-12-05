@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: guide
-version: 1.4
+version: 1.5
 last-updated: 2025-12-05
 title: Multi-Agent Workflow Guide
 author: Claude Code + Human Developer
@@ -85,6 +85,60 @@ npx claude-flow@alpha memory store \
   --namespace "architecture/decisions" \
   --key "auth-strategy" \
   --value "JWT with refresh tokens. Access token TTL: 15min. Refresh: 7 days. Redis for session blacklist. Rationale: Stateless scaling, quick revocation capability."
+```
+
+### Memory Schema for Swarm Coordination
+
+Use standardized namespaces so all agents query the same structure:
+
+| Namespace | Published By | Contains |
+|-----------|--------------|----------|
+| `architecture/contracts` | Architect | Module ownership, interface definitions, canonical types file path |
+| `architecture/decisions` | Architect (+ any agent making significant choices) | Design decisions with rationale |
+| `architecture/types` | Architect | Critical type structures (optional, for complex projects) |
+| `swarm/[agent]/status` | Each agent | Progress, gate results, blockers |
+
+**Architect publishes module contracts:**
+```bash
+npx claude-flow@alpha memory store \
+  --namespace "architecture/contracts" \
+  --key "modules" \
+  --value '{
+    "canonical_types_file": "src/contracts.ts",
+    "modules": {
+      "UserService": {
+        "owns": ["user-service.ts", "__tests__/user-service.test.ts"],
+        "interface": "IUserService",
+        "depends_on": []
+      },
+      "OrderService": {
+        "owns": ["order-service.ts", "__tests__/order-service.test.ts"],
+        "interface": "IOrderService",
+        "depends_on": ["UserService"]
+      }
+    }
+  }'
+```
+
+**TDD agent queries before starting:**
+```bash
+# Get my module definition
+npx claude-flow@alpha memory read \
+  --namespace "architecture/contracts" \
+  --key "modules" | jq '.modules.UserService'
+
+# Get canonical types file
+npx claude-flow@alpha memory read \
+  --namespace "architecture/contracts" \
+  --key "modules" | jq -r '.canonical_types_file'
+```
+
+**Agent publishes completion status:**
+```bash
+npx claude-flow@alpha memory store \
+  --namespace "swarm/user-service" \
+  --key "status" \
+  --value '{"phase": "complete", "tests_passing": 12, "gate_passed": true}'
 ```
 
 ### Design Principles Checklist
@@ -754,8 +808,7 @@ When forming a swarm, Claude Code should:
 | **[swarm-templates.md](./swarm-templates.md)** | Agent templates, 6-step protocol | Spawning agents, need copy-paste prompts |
 | **[hive-mind-templates.md](./hive-mind-templates.md)** | Queen coordination, multi-phase projects | Complex/uncertain scope tasks |
 | **[claude-flow-guide.md](./claude-flow-guide.md)** | Reference: architecture, commands, troubleshooting | "How does X work?" questions |
-| **[gap-analysis-wiring.md](./gap-analysis-wiring.md)** | SPARC & TDD London integration analysis | Understanding methodology wiring |
 
 ---
 
-**Version**: 1.1.0 | **Last Updated**: 2025-12-02
+**Version**: 1.5.0 | **Last Updated**: 2025-12-05
