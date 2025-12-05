@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: guide
-version: 1.5
+version: 1.6
 last-updated: 2025-12-05
 title: Multi-Agent Workflow Guide
 author: Claude Code + Human Developer
@@ -303,6 +303,29 @@ npx claude-flow@alpha memory vector-search "[OBJECTIVE-KEYWORDS]" --k 3 --reason
 
 ## Forming the Swarm
 
+### ⚠️ CRITICAL: Single-Message Spawning
+
+**ALL agents MUST be spawned in a SINGLE message using Claude Code's Task tool.**
+
+```
+❌ WRONG (agents may not coordinate):
+   Message 1: Task('Architect', ...)
+   Message 2: Task('Coder', ...)      // Separate message = broken swarm
+   Message 3: Task('Tester', ...)
+
+✅ CORRECT (one message, all agents):
+   [Single Message]:
+     Task('Architect', '[full prompt]', 'system-architect'),
+     Task('Coder', '[full prompt]', 'coder'),
+     Task('Tester', '[full prompt]', 'tdd-london-swarm'),
+     Task('Reviewer', '[full prompt]', 'reviewer')
+```
+
+**Why this matters:**
+- Claude Code's Task tool spawns agents in parallel when called in one message
+- Separate messages = sequential execution = agents miss coordination windows
+- Memory dependencies only work when all agents start together
+
 ### Checklist Before Spawning
 
 - [ ] **Clear objective** (one sentence: what are we building?)
@@ -310,6 +333,7 @@ npx claude-flow@alpha memory vector-search "[OBJECTIVE-KEYWORDS]" --k 3 --reason
 - [ ] **Agent types needed** (architect? coder? tester? reviewer?)
 - [ ] **Dependencies between agents** (who waits for whom?)
 - [ ] **Quality gates** (TypeScript 0 errors, tests passing, coverage target)
+- [ ] **Single message ready** (all Task() calls prepared for one message)
 
 ### Prompt Formula
 
@@ -811,4 +835,4 @@ When forming a swarm, Claude Code should:
 
 ---
 
-**Version**: 1.5.0 | **Last Updated**: 2025-12-05
+**Version**: 1.6.0 | **Last Updated**: 2025-12-05

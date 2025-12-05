@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: reference
-version: 1.4
+version: 1.5
 last-updated: 2025-12-05
 title: Swarm Templates
 author: Claude Code + Human Developer
@@ -30,6 +30,29 @@ Use swarms for **complex tasks requiring 3+ specialized agents** working in coor
 - CI/CD fixes requiring multiple specialists
 
 **Don't use swarms** for simple tasks one agent can handle.
+
+### ⚠️ CRITICAL: Single-Message Spawning
+
+**ALL agents MUST be spawned in a SINGLE message using Claude Code's Task tool.**
+
+```
+❌ WRONG (agents may not coordinate):
+   Message 1: Task('Architect', ...)
+   Message 2: Task('Coder', ...)      // Separate message = broken swarm
+   Message 3: Task('Tester', ...)
+
+✅ CORRECT (one message, all agents):
+   [Single Message]:
+     Task('Architect', '[full prompt]', 'system-architect'),
+     Task('Coder', '[full prompt]', 'coder'),
+     Task('Tester', '[full prompt]', 'tdd-london-swarm'),
+     Task('Reviewer', '[full prompt]', 'reviewer')
+```
+
+**Why this matters:**
+- Claude Code's Task tool spawns agents in parallel when called in one message
+- Separate messages = sequential execution = agents miss coordination windows
+- Memory dependencies only work when all agents start together
 
 ### Two-Step Workflow
 
@@ -503,25 +526,31 @@ PUBLISHES:
 
 ## Spawning Pattern
 
-**CRITICAL**: Spawn ALL agents in a SINGLE message for parallel execution.
+> **⚠️ REMINDER**: See [Single-Message Spawning](#️-critical-single-message-spawning) above.
+> ALL agents MUST be spawned in ONE message. Separate messages = broken swarm.
 
 ```javascript
-// In one message, call Task() for all agents:
+// ✅ CORRECT: One message with all Task() calls
 [
   Task('Architect', '[full prompt]', 'system-architect'),
   Task('Backend', '[full prompt]', 'coder'),
-  Task('Tester', '[full prompt]', 'tester'),
+  Task('Tester', '[full prompt]', 'tdd-london-swarm'),
   Task('Reviewer', '[full prompt]', 'reviewer'),
-];
 
-// Also batch TodoWrite:
-TodoWrite([
-  { content: 'Design architecture', status: 'in_progress', activeForm: 'Designing' },
-  { content: 'Implement feature', status: 'pending', activeForm: 'Implementing' },
-  { content: 'Write tests', status: 'pending', activeForm: 'Writing tests' },
-  { content: 'Validate and commit', status: 'pending', activeForm: 'Validating' },
-]);
+  // Also batch TodoWrite in the same message:
+  TodoWrite([
+    { content: 'Design architecture', status: 'in_progress', activeForm: 'Designing' },
+    { content: 'Implement feature', status: 'pending', activeForm: 'Implementing' },
+    { content: 'Write tests', status: 'pending', activeForm: 'Writing tests' },
+    { content: 'Validate and commit', status: 'pending', activeForm: 'Validating' },
+  ])
+]
 ```
+
+**Common mistake**: Spawning agents across multiple messages because prompts are long. Instead:
+1. Prepare all agent prompts first (in your head or notes)
+2. Send ONE message with ALL Task() calls
+3. Include TodoWrite in the same message
 
 ---
 
