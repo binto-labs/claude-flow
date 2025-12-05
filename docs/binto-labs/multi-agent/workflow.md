@@ -2,8 +2,8 @@
 status: keep
 phase: complete
 type: guide
-version: 1.3
-last-updated: 2025-12-03
+version: 1.4
+last-updated: 2025-12-05
 title: Multi-Agent Workflow Guide
 author: Claude Code + Human Developer
 tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-london]
@@ -111,6 +111,82 @@ npx claude-flow@alpha memory store \
 - `sparc-coord` - Full phase orchestration (`.claude/agents/templates/sparc-coordinator.md`)
 - `specification`, `pseudocode`, `architecture`, `refinement` - Individual phases (`.claude/agents/sparc/`)
 - SPARC skill: Invoke with `@sparc-methodology` (`.claude/skills/sparc-methodology/SKILL.md`)
+
+### TDD Swarm Patterns
+
+When using TDD in multi-agent swarms, **preserve the RED-GREEN-REFACTOR feedback loop** by keeping test writing and implementation within the same agent context.
+
+#### The Anti-Pattern (Avoid)
+
+```
+❌ Separate Test Designer and Coder agents:
+   TDD Designer → writes all tests (interprets requirements)
+        ↓ (async handoff via memory)
+   Coder → implements (re-interprets requirements)
+        ↓ (no feedback until integration)
+   Result: Type mismatches, late failures, broken TDD loop
+```
+
+#### The Correct Pattern: SOC-Bounded TDD
+
+```
+✅ One TDD agent per module (owns both tests AND implementation):
+
+   Architect
+      ↓ creates code-based contracts (TypeScript interfaces)
+      ↓
+   ┌─────────────┬─────────────┬─────────────┐
+   ↓             ↓             ↓             ↓
+TDD-Dev       TDD-Dev       TDD-Dev      (parallel)
+Module A      Module B      Module C
+(test+impl)   (test+impl)   (test+impl)
+   ↓             ↓             ↓
+   └─────────────┴─────────────┘
+                 ↓
+         Integration Tester
+         (cross-module tests)
+                 ↓
+            Reviewer
+```
+
+#### Key Principles
+
+1. **Code-Based Contracts**: Architect creates a contracts file with TypeScript interfaces - not prose descriptions in memory
+2. **Module Ownership**: Each TDD agent owns specific files (`owns: [file.ts, file.test.ts]`)
+3. **Compilation Gates**: Each phase must pass `tsc --noEmit` before next phase starts
+4. **Preserved TDD Loop**: Same agent writes test → implements → verifies
+
+#### Contract File Pattern
+
+Architect creates a shared contracts file that all agents import from:
+
+```typescript
+// contracts.ts (created by Architect, read-only for TDD agents)
+
+// Re-export canonical types - ALL agents use these
+export type { GameState, User, Order } from '../types';
+
+// Define module interfaces
+export interface IUserService {
+  createUser(data: CreateUserInput): Promise<User>;
+  getUser(id: string): Promise<User | null>;
+}
+
+export interface IOrderService {
+  createOrder(userId: string, items: OrderItem[]): Promise<Order>;
+  getOrdersByUser(userId: string): Promise<Order[]>;
+}
+```
+
+**Enforcement**: TDD agents must import types from contracts file, not define their own.
+
+#### When to Use This Pattern
+
+| Scenario | Pattern |
+|----------|---------|
+| Single module, single agent | Standard TDD (one agent does everything) |
+| Multi-module feature | SOC-bounded TDD (one TDD agent per module) |
+| Cross-cutting concerns | Integration Tester agent after module agents complete |
 
 ### Decision Tree: Task Complexity
 

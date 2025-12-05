@@ -2,8 +2,8 @@
 status: keep
 phase: complete
 type: reference
-version: 1.3
-last-updated: 2025-12-03
+version: 1.4
+last-updated: 2025-12-05
 title: Swarm Templates
 author: Claude Code + Human Developer
 tags: [swarm, templates, agents, coordination, cleanup, patterns, tdd-london, sparc]
@@ -250,9 +250,27 @@ npx claude-flow@alpha memory read --namespace "architecture/decisions" --key "*"
 
 YOUR TASKS:
 - Design system architecture
-- Define interfaces and contracts
+- Define module boundaries (one module = one TDD agent)
+- Create CODE-BASED CONTRACTS file (see below)
 - Create directory structure
 - Write architecture README
+
+📜 CODE-BASED CONTRACTS (CRITICAL):
+Create a contracts file with TypeScript interfaces that ALL other agents will import:
+
+// contracts.ts
+export type { User, Order, ... } from '../types';  // Re-export canonical types
+
+export interface IUserService {
+  createUser(data: CreateUserInput): Promise<User>;
+  // ... define ALL module interfaces
+}
+
+This file is the SINGLE SOURCE OF TRUTH for types.
+Other agents MUST import from here, not define their own types.
+
+VERIFICATION GATE:
+npx tsc --noEmit contracts.ts  # Must pass before other agents start
 
 CAPTURE DECISIONS (for future swarm consistency):
 npx claude-flow@alpha memory store \\
@@ -266,7 +284,8 @@ npx claude-flow@alpha memory store \\
   --value "[how applied in this project]"
 
 PUBLISHES:
-- swarm/architect/interfaces
+- swarm/architect/contracts (path to contracts file)
+- swarm/architect/modules (list of modules with ownership)
 - swarm/architect/decisions (list of decisions stored)
 - swarm/architect/complete
 `,
@@ -352,6 +371,95 @@ npx claude-flow@alpha memory store \\
 PUBLISHES:
 - swarm/tester/contracts (mock definitions for other agents)
 - swarm/tester/tests-passing
+`,
+  'tdd-london-swarm'
+);
+```
+
+### TDD-Dev Agent (SOC-Bounded - Recommended for Multi-Module)
+
+Use this template when you need parallel TDD agents that each own a module. This preserves the RED-GREEN-REFACTOR loop within each agent.
+
+```javascript
+Task(
+  'TDD Development - [MODULE-NAME]',
+  `
+You are a TDD-Dev agent for [PROJECT] swarm.
+You OWN both tests AND implementation for [MODULE-NAME].
+
+📁 YOUR FILES (you own these exclusively):
+owns: [src/[module].ts, src/__tests__/[module].test.ts]
+
+[FULL 6-STEP PROTOCOL HERE]
+
+WAIT FOR Architect:
+while ! npx claude-flow@alpha memory read \\
+  --namespace "swarm/architect" \\
+  --key "contracts"; do
+  sleep 10
+done
+
+📜 IMPORT FROM CONTRACTS (CRITICAL):
+// You MUST import types from the contracts file
+import type { [Types] } from './contracts';
+// DO NOT define your own types - use the architect's contracts
+
+🔴🟢🔄 TDD CYCLE (within YOUR context):
+1. RED: Write a failing test for one behavior
+2. GREEN: Write minimal code to pass
+3. REFACTOR: Improve while keeping green
+4. REPEAT until module complete
+
+YOUR TASKS:
+- Import types from contracts.ts (never define your own)
+- Write tests for [MODULE-NAME] interface (London School TDD)
+- Implement to pass tests
+- Verify: npm test -- [module-pattern]
+- Verify: npx tsc --noEmit
+
+VERIFICATION GATE (must pass before marking complete):
+npm test -- [module] && npx tsc --noEmit
+
+PUBLISHES:
+- swarm/[module]/tests-passing
+- swarm/[module]/implementation-complete
+`,
+  'tdd-london-swarm'
+);
+```
+
+### Integration Tester Agent
+
+Use after all TDD-Dev agents complete. Tests cross-module interactions.
+
+```javascript
+Task(
+  'Integration Testing',
+  `
+You are the integration tester for [PROJECT] swarm.
+You test CROSS-MODULE interactions after individual modules are complete.
+
+[FULL 6-STEP PROTOCOL HERE]
+
+WAIT FOR ALL module agents:
+while ! npx claude-flow@alpha memory read --namespace "swarm/module-a" --key "implementation-complete"; do sleep 10; done
+while ! npx claude-flow@alpha memory read --namespace "swarm/module-b" --key "implementation-complete"; do sleep 10; done
+# ... wait for all modules
+
+📜 IMPORT FROM CONTRACTS:
+import type { [Types] } from './contracts';
+
+YOUR TASKS:
+- Write integration tests for cross-module workflows
+- Test that modules work together correctly
+- Verify end-to-end scenarios
+- Do NOT test individual module internals (TDD-Dev agents did that)
+
+VERIFICATION GATE:
+npm test -- integration && npx tsc --noEmit
+
+PUBLISHES:
+- swarm/integration/tests-passing
 `,
   'tdd-london-swarm'
 );
@@ -467,16 +575,16 @@ TodoWrite([
 
 | Type               | Use For                       |
 | ------------------ | ----------------------------- |
-| `system-architect` | Design, structure, interfaces |
-| `coder`            | Implementation, features      |
-| `tdd-london-swarm` | Test suites with London School TDD (DEFAULT for testing) |
-| `tester`           | Generic testing (use `tdd-london-swarm` instead) |
+| `system-architect` | Design, structure, code-based contracts |
+| `coder`            | Implementation (single module, no TDD ownership) |
+| `tdd-london-swarm` | TDD-Dev agent: owns BOTH tests AND impl for a module |
+| `tester`           | Generic testing (prefer `tdd-london-swarm` instead) |
 | `reviewer`         | Validation, QA, commits       |
 | `researcher`       | Analysis, investigation       |
 | `backend-dev`      | API, database work            |
 | `sparc-coord`      | SPARC methodology orchestration |
 
-> **Testing Default**: Use `tdd-london-swarm` for all testing agents. See `.claude/agents/testing/unit/tdd-london-swarm.md` for the full London School TDD methodology.
+> **Multi-Module TDD**: For swarms with multiple modules, use `tdd-london-swarm` as TDD-Dev agents - each owns both tests AND implementation for their module. This preserves the RED-GREEN-REFACTOR loop. See "TDD-Dev Agent" template above.
 
 ---
 
