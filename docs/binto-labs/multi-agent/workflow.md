@@ -2,11 +2,11 @@
 status: keep
 phase: complete
 type: guide
-version: 1.6
-last-updated: 2025-12-05
+version: 1.8
+last-updated: 2025-12-10
 title: Multi-Agent Workflow Guide
 author: Claude Code + Human Developer
-tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-london]
+tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-london, github, epic]
 ---
 
 # Multi-Agent Workflow Guide
@@ -18,6 +18,7 @@ tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-
 
 ## 📖 Table of Contents
 
+- [Project Planning Layer (Multi-Day Projects)](#project-planning-layer-multi-day-projects)
 - [Pre-Work: What Am I Building?](#pre-work-what-am-i-building)
 - [Forming the Swarm](#forming-the-swarm)
 - [Swarm Execution](#swarm-execution)
@@ -26,6 +27,509 @@ tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-
 - [Validation & Pattern Capture](#validation--pattern-capture)
 - [Commit](#commit)
 - [Continuous Improvement](#continuous-improvement)
+
+---
+
+## Project Planning Layer (Multi-Day Projects)
+
+> **When to use:** Projects spanning multiple days/weeks, or any work requiring persistent context across sessions.
+> **Skip this section** for single-session tasks (< 1 day) — go directly to [Pre-Work](#pre-work-what-am-i-building).
+
+### Why GitHub Epics?
+
+Claude Code maintains context through GitHub's structured data (Epics → Issues → PRs). This solves context window exhaustion for long projects:
+
+- **Week 1 decisions** remain accessible in **Week 3**
+- Agents can see the **project arc** at any time
+- **Architectural choices** persist in issue descriptions and comments
+- **Progress tracking** is automatic via issue/PR lifecycle
+
+### The Two Layers
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PROJECT LAYER (GitHub Epic)                     [Days/Weeks]   │
+│  └── Epic = Project container                                   │
+│      └── Issues = Discrete tasks with acceptance criteria       │
+│          └── PRs = Deliverables with peer review                │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+                 Each Issue triggers...
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  TASK LAYER (Swarm Execution)                    [Hours]        │
+│  └── SPARC methodology                                          │
+│      └── Parallel agent coordination                            │
+│          └── Quality gates → PR                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Project Workflow with Handoffs
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 1: PLANNING                                                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  👤 Human                        🤖 Claude (Planning Mode)                   │
+│     │                                   │                                    │
+│     │  "Enter planning mode for         │                                    │
+│     │   [project description]"          │                                    │
+│     │ ─────────────────────────────────>│                                    │
+│     │                                   │                                    │
+│     │                                   │  Drafts comprehensive plan:        │
+│     │                                   │  - Objectives                      │
+│     │                                   │  - Architecture                    │
+│     │                                   │  - Task breakdown                  │
+│     │                                   │  - Risk assessment                 │
+│     │                                   │                                    │
+│     │<─────────────────────────────────│                                    │
+│     │  Plan draft for review            │                                    │
+│     │                                   │                                    │
+│  ┌──┴──┐                                │                                    │
+│  │REVIEW│  Iterate until satisfied      │                                    │
+│  └──┬──┘                                │                                    │
+│     │                                   │                                    │
+│     │  "Approved. Create GitHub Epic"   │                                    │
+│     │ ─────────────────────────────────>│                                    │
+│     │                                   │                                    │
+│     │              ══════ HANDOFF: Human → GitHub ══════                     │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 2: INSTANTIATION                                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  🤖 Claude                              📋 GitHub                            │
+│     │                                       │                                │
+│     │  Creates Epic issue with:             │                                │
+│     │  - Project overview                   │                                │
+│     │  - Success criteria                   │                                │
+│     │  - Architectural guidelines           │                                │
+│     │ ─────────────────────────────────────>│  Epic #100                     │
+│     │                                       │                                │
+│     │  Decomposes into Issues:              │                                │
+│     │  - Clear objectives                   │                                │
+│     │  - Acceptance criteria                │                                │
+│     │  - Architectural constraints          │                                │
+│     │  - Links to Epic                      │                                │
+│     │ ─────────────────────────────────────>│  Issues #101-#108              │
+│     │                                       │                                │
+│     │              ══════ HANDOFF: Plan → Backlog ══════                     │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 3: EXECUTION (Per Issue)                                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  👤 Human                     🐝 Swarm                      📋 GitHub        │
+│     │                            │                              │            │
+│     │  "Work on Issue #101       │                              │            │
+│     │   following workflow.md"   │                              │            │
+│     │ ──────────────────────────>│                              │            │
+│     │                            │                              │            │
+│     │              ══════ HANDOFF: Human → Swarm ══════         │            │
+│     │                            │                              │            │
+│     │                            │  Reads issue context         │            │
+│     │                            │<────────────────────────────│            │
+│     │                            │                              │            │
+│     │                            │  Executes SPARC + TDD:       │            │
+│     │                            │  - Architect agent           │            │
+│     │                            │  - TDD-Dev agents            │            │
+│     │                            │  - Reviewer agent            │            │
+│     │                            │                              │            │
+│     │                            │  Creates PR linked to issue  │            │
+│     │                            │ ────────────────────────────>│  PR #109   │
+│     │                            │                              │            │
+│     │              ══════ HANDOFF: Swarm → PR ══════            │            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 4: REVIEW                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  🔍 Review Swarm                 👤 Human                   📋 GitHub        │
+│        │                            │                           │            │
+│        │  code-review-swarm         │                           │            │
+│        │  analyzes PR:              │                           │            │
+│        │  - Code quality            │                           │            │
+│        │  - Test coverage           │                           │            │
+│        │  - Security scan           │                           │            │
+│        │  - Architecture compliance │                           │            │
+│        │ ──────────────────────────────────────────────────────>│            │
+│        │  Posts review comments     │                           │            │
+│        │                            │                           │            │
+│        │              ══════ HANDOFF: Review → Human ══════     │            │
+│        │                            │                           │            │
+│        │                         ┌──┴──┐                        │            │
+│        │                         │REVIEW│ Final approval        │            │
+│        │                         └──┬──┘                        │            │
+│        │                            │                           │            │
+│        │                            │  Approve & Merge          │            │
+│        │                            │ ─────────────────────────>│            │
+│        │                            │                           │            │
+│        │              ══════ HANDOFF: Human → Merge ══════      │            │
+│        │                            │                           │            │
+│        │                            │       Issue #101 closed   │            │
+│        │                            │       Epic #100 progress  │            │
+│        │                            │<─────────────────────────│            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ PHASE 5: CONTINUATION                                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  👤 Human (Next Session)         📋 GitHub                                   │
+│     │                                │                                       │
+│     │  "Resume work on Epic #100"    │                                       │
+│     │ ──────────────────────────────>│                                       │
+│     │                                │                                       │
+│     │  Claude reads:                 │                                       │
+│     │  - Epic description            │                                       │
+│     │  - Closed issues (context)     │                                       │
+│     │  - Open issues (remaining)     │                                       │
+│     │  - PR comments (decisions)     │                                       │
+│     │<──────────────────────────────│                                       │
+│     │                                │                                       │
+│     │  Full project context restored │                                       │
+│     │  → Pick next issue             │                                       │
+│     │  → Return to PHASE 3           │                                       │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Handoff Summary
+
+| Handoff | From | To | Trigger | Artifact |
+|---------|------|-----|---------|----------|
+| **Plan Approval** | Human | Claude | "Approved, create Epic" | Reviewed plan |
+| **Plan → Backlog** | Claude | GitHub | Epic created | Epic + Issues |
+| **Issue → Swarm** | Human | Swarm | "Work on Issue #X" | Issue context |
+| **Swarm → PR** | Swarm | GitHub | All gates pass | PR linked to issue |
+| **PR → Review** | GitHub | Review Swarm | PR opened | PR diff + context |
+| **Review → Human** | Review Swarm | Human | Review complete | Review comments |
+| **Merge → Close** | Human | GitHub | Approve & merge | Issue auto-closed |
+| **Session Resume** | Human | Claude | "Resume Epic #X" | Full project context |
+
+---
+
+### Epic Template
+
+When Claude creates the Epic issue:
+
+```markdown
+## 🎯 Epic: [Project Name]
+
+### Overview
+[1-2 paragraph project description from planning phase]
+
+### Success Criteria
+- [ ] [Measurable outcome 1]
+- [ ] [Measurable outcome 2]
+- [ ] [Measurable outcome 3]
+- [ ] All issues closed
+- [ ] All PRs merged
+- [ ] Documentation complete
+
+### Architectural Guidelines
+[Key decisions that ALL issues must follow]
+- **Pattern**: [e.g., Repository pattern for data access]
+- **Stack**: [e.g., TypeScript, Jest, PostgreSQL]
+- **Constraints**: [e.g., No external API calls in unit tests]
+
+### Issues
+This epic will be decomposed into the following issues:
+- [ ] #101 - [Issue title]
+- [ ] #102 - [Issue title]
+- [ ] #103 - [Issue title]
+...
+
+### Timeline
+- **Start**: [Date]
+- **Target**: [Date]
+- **Checkpoints**: [Weekly review cadence]
+
+---
+🤖 *This epic was created via Claude Code planning mode*
+```
+
+---
+
+### Issue Template
+
+Each issue decomposed from the Epic:
+
+```markdown
+## 🎫 [Issue Title]
+
+**Epic**: #100
+**Estimated effort**: [Small/Medium/Large]
+
+### Objective
+[Clear, specific description of what this issue delivers]
+
+### Acceptance Criteria
+- [ ] [Testable criterion 1]
+- [ ] [Testable criterion 2]
+- [ ] [Testable criterion 3]
+- [ ] Tests pass with 90%+ coverage
+- [ ] TypeScript: 0 errors
+- [ ] PR approved and merged
+
+### Architectural Constraints
+[Inherited from Epic + issue-specific]
+- Import types from `contracts.ts`
+- Follow [pattern] established in Epic
+- [Issue-specific constraint]
+
+### Context
+[Links to related issues, prior decisions, relevant code]
+- Depends on: #99 (if any)
+- Related: #98
+- Reference: `src/services/` for similar patterns
+
+### Swarm Guidance
+When executing this issue via workflow.md:
+- **Topology**: [mesh/hierarchical/star]
+- **Agents needed**: [architect, tdd-dev, reviewer]
+- **Special considerations**: [any issue-specific notes]
+
+---
+🤖 *This issue is part of Epic #100*
+```
+
+---
+
+### GitHub Agents Available
+
+Use these agents for project-layer operations:
+
+| Agent | Purpose | When to Use |
+|-------|---------|-------------|
+| `issue-tracker` | Create/manage issues | Epic decomposition |
+| `swarm-issue` | Transform issue → swarm | Starting task execution |
+| `code-review-swarm` | Peer review PRs | After swarm creates PR |
+| `pr-manager` | PR lifecycle | Managing PR state |
+| `project-board-sync` | Track Epic progress | Visibility into project state |
+
+**Location**: `.claude/agents/github/`
+
+---
+
+### Cross-Session Context Recovery
+
+When resuming work on a multi-day project:
+
+```bash
+# Have Claude read the Epic and its state
+gh issue view 100 --comments  # Epic with all discussion
+gh issue list --search "epic:100"  # All related issues
+gh pr list --search "closes:#101"  # PRs for issues
+
+# Claude now has:
+# - Original project plan (Epic description)
+# - Architectural decisions (Epic + issue comments)
+# - What's done (closed issues)
+# - What's in progress (open PRs)
+# - What's remaining (open issues)
+```
+
+Or simply: *"Resume work on Epic #100 following workflow.md"*
+
+Claude will read the Epic context and continue where you left off.
+
+---
+
+### Decision: When to Use Project Layer
+
+```
+How long is this project?
+├── Single session (< 1 day)
+│   └── Skip Project Layer
+│       → Go directly to "Pre-Work: What Am I Building?"
+│
+├── Multi-day (2-5 days)
+│   └── Use Project Layer
+│       → Create Epic with 3-8 issues
+│       → Each issue = one swarm execution
+│
+└── Multi-week (1+ weeks)
+    └── Use Project Layer + Weekly Checkpoints
+        → Create Epic with milestones
+        → Group issues by milestone
+        → Weekly review of Epic progress
+```
+
+---
+
+### GitHub vs claude-flow Memory: Complementary Persistence
+
+The Project Layer (GitHub) and Task Layer (claude-flow memory) serve different purposes and complement each other:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GITHUB (Project Context)                                                    │
+│ ═══════════════════════                                                     │
+│ Audience: Humans + AI (cross-session)                                       │
+│ Lifespan: Permanent (until project closes)                                  │
+│ Scope: Project-wide                                                         │
+│                                                                             │
+│ Contains:                                                                   │
+│ • WHY we're building (Epic description)                                     │
+│ • WHAT we're building (Issue objectives)                                    │
+│ • WHEN decisions were made (PR comments, issue discussions)                 │
+│ • WHO approved what (review history)                                        │
+│ • PROGRESS tracking (open/closed issues)                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    Context flows DOWN at session start
+                    Decisions flow UP at session end
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CLAUDE-FLOW MEMORY (Execution Context)                                      │
+│ ══════════════════════════════════════                                      │
+│ Audience: Agents (within-session coordination)                              │
+│ Lifespan: Session → Persistent (configurable)                               │
+│ Scope: Swarm/task-specific                                                  │
+│                                                                             │
+│ Contains:                                                                   │
+│ • HOW to build (contracts, module ownership)                                │
+│ • COORDINATION state (swarm/[agent]/status)                                 │
+│ • PATTERNS learned (code-quality/failure-patterns)                          │
+│ • DECISIONS made during execution (architecture/decisions)                  │
+│ • NEURAL training data (ReasoningBank patterns)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Namespace → GitHub Mapping
+
+| Memory Namespace | Purpose | GitHub Equivalent | Relationship |
+|------------------|---------|-------------------|--------------|
+| `architecture/contracts` | Module interfaces, type definitions | Issue "Architectural Constraints" | Memory = **runtime**, GitHub = **documentation** |
+| `architecture/decisions` | Design choices with rationale | Epic description, PR comments | Memory = **fast lookup**, GitHub = **audit trail** |
+| `swarm/[agent]/status` | Agent progress, gate results | None (too granular) | **Memory only** - ephemeral coordination |
+| `code-quality/failure-patterns` | Learned anti-patterns | Issue retrospective comments | Memory = **machine learning**, GitHub = **human learning** |
+| `patterns/*` | Confidence-scored approaches | None | **Memory only** - neural/ReasoningBank |
+
+#### The Context Flow
+
+```
+SESSION START (Context Recovery)
+════════════════════════════════
+
+GitHub Epic #100
+    │
+    ├── Epic description → Human reads project context
+    │
+    ├── Issue #101 (current task)
+    │   ├── Objective → Drives swarm goal
+    │   ├── Acceptance criteria → Quality gates
+    │   └── Architectural constraints → Seeds memory
+    │
+    └── Closed issues → What's already done (avoid re-work)
+
+        ↓ Claude extracts and loads into memory
+
+claude-flow memory
+    │
+    ├── architecture/contracts ← from Issue constraints + existing code
+    ├── architecture/decisions ← from Epic + prior PRs
+    └── swarm/*/status ← fresh (new swarm)
+
+
+DURING EXECUTION (Agent Coordination)
+═════════════════════════════════════
+
+Agents use MEMORY for fast coordination:
+    • Architect publishes contracts → memory
+    • TDD-Dev reads contracts → memory
+    • Agents publish status → memory
+    • Reviewer checks all gates → memory
+
+GitHub is NOT used during swarm execution (too slow, too noisy)
+
+
+SESSION END (Context Persistence)
+═════════════════════════════════
+
+Important decisions flow BACK to GitHub:
+
+claude-flow memory
+    │
+    ├── architecture/decisions (significant ones)
+    │       ↓
+    │   PR description or Issue comment
+    │   "Decided to use X pattern because Y"
+    │
+    ├── code-quality/failure-patterns
+    │       ↓
+    │   Issue retrospective comment (optional)
+    │   "Note: Encountered Z issue, fixed by W"
+    │
+    └── swarm/*/status
+            ↓
+        (Discarded - ephemeral)
+
+GitHub Epic #100
+    └── Issue #101 closed via PR merge
+        └── Decision audit trail preserved
+```
+
+#### What Lives Where (Source of Truth)
+
+| Information Type | Primary Home | Why |
+|------------------|--------------|-----|
+| Project goals | **GitHub Epic** | Human-readable, permanent |
+| Task objectives | **GitHub Issue** | Links to Epic, acceptance criteria |
+| Module interfaces | **Code** (`contracts.ts`) | Single source of truth for types |
+| Interface references | **Memory** | Fast agent lookup during execution |
+| Agent coordination | **Memory** | Ephemeral, high-frequency |
+| Architectural decisions | **Both** | Memory for speed, GitHub for audit |
+| Failure patterns | **Memory** | Machine learning, confidence scores |
+| Failure lessons | **GitHub** | Human-readable retrospectives |
+| Progress tracking | **GitHub** | Issue/PR lifecycle |
+| Neural patterns | **Memory** | ReasoningBank only |
+
+#### Syncing Decisions to GitHub
+
+When a swarm makes significant architectural decisions, persist them to GitHub for future sessions:
+
+```bash
+# After swarm completes, if important decisions were made:
+gh issue comment 101 --body "## Architectural Decisions Made
+
+During implementation, the following decisions were made:
+
+1. **[Decision]**: [Rationale]
+2. **[Decision]**: [Rationale]
+
+These are also stored in memory namespace \`architecture/decisions\`."
+```
+
+**When to sync to GitHub:**
+- New patterns adopted that affect future issues
+- Deviations from Epic's architectural guidelines (with justification)
+- Discoveries that change project scope
+- Lessons learned that should inform remaining issues
+
+**When NOT to sync (keep in memory only):**
+- Ephemeral coordination state
+- Agent-to-agent handoffs
+- Intermediate progress updates
+- Low-confidence patterns still being validated
+
+---
+
+[↑ Back to TOC](#-table-of-contents)
 
 ---
 
