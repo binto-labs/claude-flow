@@ -2,19 +2,22 @@
 status: keep
 phase: complete
 type: reference
-version: 1.1
-last-updated: 2025-11-27
-title: Hive-Mind Templates
+version: 2.0
+last-updated: 2026-01-16
+title: Hive-Mind Templates (V3)
 author: Claude Code + Human Developer
-tags: [hive-mind, queen, workers, templates, coordination, phases]
+tags: [hive-mind, queen, workers, templates, coordination, phases, v3, unified-coordinator, byzantine, sona]
 ---
 
-# Hive-Mind Templates
+# Hive-Mind Templates (V3)
 
 Complete guide for spawning Queen-coordinated hive-mind swarms.
 
 > **When to use hive-mind vs swarm:** See [workflow.md](./workflow.md) decision tree.
 > **For reference details:** See [claude-flow-guide.md](./claude-flow-guide.md) for architecture and commands.
+>
+> **V3 Updates**: This guide is aligned with Claude-Flow V3.0.0-alpha.79.
+> Key enhancements: 15-agent hierarchical mesh, Byzantine fault tolerance, SONA learning, event sourcing.
 
 ---
 
@@ -56,33 +59,57 @@ See ./claude-flow-guide.md
 
 ---
 
-## Hive-Mind Architecture
+## Hive-Mind Architecture (V3)
+
+### V3: 15-Agent Hierarchical Mesh with Byzantine Consensus
 
 ```
-                    ┌─────────────┐
-                    │   QUEEN     │
-                    │ Coordinator │
-                    └──────┬──────┘
-                           │
-              ┌────────────┼────────────┐
-              │            │            │
-        ┌─────▼─────┐ ┌────▼────┐ ┌─────▼─────┐
-        │  Worker 1 │ │ Worker 2│ │  Worker N │
-        │  (Phase A)│ │(Phase A)│ │ (Phase B) │
-        └─────┬─────┘ └────┬────┘ └─────┬─────┘
-              │            │            │
-              └────────────┴────────────┘
-                    Report to Queen
+                         ┌─────────────────┐
+                         │      QUEEN      │
+                         │ UnifiedSwarm    │
+                         │ Coordinator     │
+                         └────────┬────────┘
+                                  │
+                    ┌─────────────┼─────────────┐
+                    │             │             │
+              ┌─────▼─────┐ ┌─────▼─────┐ ┌─────▼─────┐
+              │ Byzantine │ │  SONA     │ │  Claims   │
+              │ Consensus │ │  Learning │ │  Manager  │
+              │  Layer    │ │  Layer    │ │  Layer    │
+              └─────┬─────┘ └─────┬─────┘ └─────┬─────┘
+                    │             │             │
+         ┌──────────┴──────────┬──┴──┬──────────┴──────────┐
+         │           │         │     │         │           │
+    ┌────▼────┐ ┌────▼────┐ ┌──▼─────▼──┐ ┌────▼────┐ ┌────▼────┐
+    │Worker 1 │ │Worker 2 │ │ Worker N  │ │Worker N+1│ │Worker 15│
+    │(Phase A)│ │(Phase A)│ │ (Phase B) │ │(Phase B) │ │(Phase C)│
+    └────┬────┘ └────┬────┘ └─────┬─────┘ └────┬────┘ └────┬────┘
+         │           │            │            │           │
+         └───────────┴────────────┴────────────┴───────────┘
+                          Event-Sourced Reports
 ```
 
-**Flow:**
+**V3 Enhancements:**
 
-1. Queen analyzes task → creates plan
-2. Queen spawns workers (Phase A)
-3. Workers execute → report to Queen
-4. Queen evaluates → spawns Phase B workers
-5. Repeat until objective complete
-6. Queen validates final result
+| Feature | V2 | V3 |
+|---------|-----|-----|
+| Max workers | ~10 | **15-agent mesh** |
+| Fault tolerance | None | **Byzantine (handles 1/3 failures)** |
+| Learning | Manual patterns | **SONA auto-optimization** |
+| State management | Memory store | **Event sourcing (full audit)** |
+| Coordination | Multiple coordinators | **UnifiedSwarmCoordinator** |
+
+**V3 Flow:**
+
+1. Queen analyzes task → creates plan (event-sourced)
+2. SONA recommends optimal worker types
+3. Queen spawns workers (Phase A) with Claims tracking
+4. Workers execute → report via event stream
+5. Byzantine consensus validates reports (tolerates 1/3 failures)
+6. Queen evaluates → SONA learns from results
+7. Queen spawns Phase B workers (optimized selection)
+8. Repeat until objective complete
+9. Queen validates final result with audit trail
 
 ---
 
@@ -96,8 +123,8 @@ See ./claude-flow-guide.md
 # ═══════════════════════════════════════════════════════════════
 
 # 1️⃣ INITIALIZE hive-mind:
-npx claude-flow@alpha hooks pre-task --description "Queen coordinator"
-npx claude-flow@alpha hooks session-restore --session-id "hive-[PROJECT]"
+npx claude-flow@v3alpha hooks pre-task --description "Queen coordinator"
+npx claude-flow@v3alpha hooks session-restore --session-id "hive-[PROJECT]"
 
 # 2️⃣ ANALYZE objective and CREATE plan:
 # - Break down into phases
@@ -105,7 +132,7 @@ npx claude-flow@alpha hooks session-restore --session-id "hive-[PROJECT]"
 # - Define success criteria per phase
 # - Publish plan to memory
 
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
   --namespace "hive/[PROJECT]" \
   --key "plan" \
   --value "[PHASE_BREAKDOWN_AND_WORKER_ASSIGNMENTS]"
@@ -117,7 +144,7 @@ npx claude-flow@alpha memory store \
 # 4️⃣ MONITOR worker progress:
 # Poll memory for worker reports
 while true; do
-  npx claude-flow@alpha memory read --namespace "hive/worker-*" --key "report"
+  npx claude-flow@v3alpha memory read --namespace "hive/worker-*" --key "report"
   # Evaluate reports, decide if phase complete
   # If phase complete, proceed to spawn Phase B
   sleep 15
@@ -128,7 +155,7 @@ done
 # - If scope changed: update plan, spawn new workers
 # - If phase complete: spawn next phase workers
 
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
   --namespace "hive/queen" \
   --key "phase-[N]-evaluation" \
   --value "[FINDINGS_AND_NEXT_STEPS]"
@@ -139,13 +166,13 @@ npx claude-flow@alpha memory store \
 # - Create final report
 # - Commit changes
 
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
   --namespace "hive/queen" \
   --key "mission-complete" \
   --value "[FINAL_STATUS_AND_DELIVERABLES]"
 
-npx claude-flow@alpha hooks post-task --task-id "queen"
-npx claude-flow@alpha hooks session-end --export-metrics true
+npx claude-flow@v3alpha hooks post-task --task-id "queen"
+npx claude-flow@v3alpha hooks session-end --export-metrics true
 ```
 
 ---
@@ -160,12 +187,12 @@ npx claude-flow@alpha hooks session-end --export-metrics true
 # ═══════════════════════════════════════════════════════════════
 
 # 1️⃣ BEFORE starting:
-npx claude-flow@alpha hooks pre-task --description "[WORKER-ROLE] work"
-npx claude-flow@alpha hooks session-restore --session-id "hive-[PROJECT]"
+npx claude-flow@v3alpha hooks pre-task --description "[WORKER-ROLE] work"
+npx claude-flow@v3alpha hooks session-restore --session-id "hive-[PROJECT]"
 
 # 2️⃣ READ Queen's plan and your assignment:
-npx claude-flow@alpha memory read --namespace "hive/[PROJECT]" --key "plan"
-npx claude-flow@alpha memory read --namespace "hive/queen" --key "[YOUR-ASSIGNMENT]"
+npx claude-flow@v3alpha memory read --namespace "hive/[PROJECT]" --key "plan"
+npx claude-flow@v3alpha memory read --namespace "hive/queen" --key "[YOUR-ASSIGNMENT]"
 
 # 3️⃣ EXECUTE your tasks:
 # [Specific work here]
@@ -173,7 +200,7 @@ npx claude-flow@alpha memory read --namespace "hive/queen" --key "[YOUR-ASSIGNME
 # FOR ANY .md FILES: Add YAML frontmatter per document-classification-guide.md
 
 # 4️⃣ REPORT to Queen:
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
   --namespace "hive/[WORKER-ID]" \
   --key "report" \
   --value "{
@@ -188,7 +215,7 @@ npx claude-flow@alpha memory store \
 # Queen may give additional tasks or signal completion
 
 # 6️⃣ AFTER completion:
-npx claude-flow@alpha hooks post-task --task-id "[WORKER-ID]"
+npx claude-flow@v3alpha hooks post-task --task-id "[WORKER-ID]"
 ```
 
 ---
@@ -201,8 +228,8 @@ You are the QUEEN coordinator for [PROJECT] hive-mind.
 🔧 QUEEN PROTOCOL (CRITICAL - YOU ARE THE COORDINATOR):
 
 1️⃣ INITIALIZE:
-npx claude-flow@alpha hooks pre-task --description "Queen coordinator"
-npx claude-flow@alpha hooks session-restore --session-id "hive-[PROJECT]"
+npx claude-flow@v3alpha hooks pre-task --description "Queen coordinator"
+npx claude-flow@v3alpha hooks session-restore --session-id "hive-[PROJECT]"
 
 2️⃣ ANALYZE objective:
 
@@ -212,7 +239,7 @@ npx claude-flow@alpha hooks session-restore --session-id "hive-[PROJECT]"
 - Define success criteria
 
 3️⃣ CREATE and PUBLISH plan:
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
  --namespace "hive/[PROJECT]" \
  --key "plan" \
  --value "[YOUR_PHASE_BREAKDOWN]"
@@ -241,12 +268,12 @@ Continue until all phases complete
 - Create final report
 - Commit changes
 
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
  --namespace "hive/queen" \
  --key "mission-complete" \
  --value "[FINAL_STATUS]"
 
-npx claude-flow@alpha hooks post-task --task-id "queen"
+npx claude-flow@v3alpha hooks post-task --task-id "queen"
 
 YOUR OBJECTIVE:
 [DETAILED OBJECTIVE HERE]
@@ -268,11 +295,11 @@ You are [WORKER-ID] for [PROJECT] hive-mind.
 🔧 WORKER PROTOCOL (CRITICAL - REPORT TO QUEEN):
 
 1️⃣ INITIALIZE:
-npx claude-flow@alpha hooks pre-task --description "[WORKER-ROLE]"
-npx claude-flow@alpha hooks session-restore --session-id "hive-[PROJECT]"
+npx claude-flow@v3alpha hooks pre-task --description "[WORKER-ROLE]"
+npx claude-flow@v3alpha hooks session-restore --session-id "hive-[PROJECT]"
 
 2️⃣ READ assignment:
-npx claude-flow@alpha memory read --namespace "hive/[PROJECT]" --key "plan"
+npx claude-flow@v3alpha memory read --namespace "hive/[PROJECT]" --key "plan"
 
 3️⃣ EXECUTE your tasks:
 
@@ -281,7 +308,7 @@ npx claude-flow@alpha memory read --namespace "hive/[PROJECT]" --key "plan"
 - [Task 3]
 
 After each file edit:
-npx claude-flow@alpha hooks post-edit --file "[file]"
+npx claude-flow@v3alpha hooks post-edit --file "[file]"
 
 📋 FOR ANY .md FILES YOU CREATE:
 Add YAML frontmatter at the top:
@@ -295,7 +322,7 @@ title: [Document Title]
 ---
 
 4️⃣ REPORT to Queen:
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
  --namespace "hive/[WORKER-ID]" \
  --key "report" \
  --value "{
@@ -307,7 +334,7 @@ recommendations: ['suggest Z for next phase']
 }"
 
 5️⃣ AFTER completion:
-npx claude-flow@alpha hooks post-task --task-id "[WORKER-ID]"
+npx claude-flow@v3alpha hooks post-task --task-id "[WORKER-ID]"
 
 QUALITY GATES:
 
@@ -499,17 +526,38 @@ Phase D: Queen evaluates again
 
 ---
 
-## Queen Agent Types
+## Queen Agent Types (V3)
 
-| Type                                  | Use For                        |
-| ------------------------------------- | ------------------------------ |
-| `hierarchical-coordinator`            | General hive-mind coordination |
-| `queen-coordinator`                   | Strategic decision-making      |
-| `collective-intelligence-coordinator` | Consensus-based decisions      |
+| Type                                  | Use For                        | V3 Notes |
+| ------------------------------------- | ------------------------------ | -------- |
+| `unified-coordinator`                 | **All hive-mind coordination** | V3 default (replaces all below) |
+| `hierarchical-coordinator`            | General hive-mind coordination | **Deprecated** → use unified |
+| `queen-coordinator`                   | Strategic decision-making      | **Deprecated** → use unified |
+| `collective-intelligence-coordinator` | Consensus-based decisions      | **Deprecated** → use unified |
+| `byzantine-coordinator`               | Fault-tolerant coordination    | **V3 NEW** - handles 1/3 failures |
 
-## Worker Agent Types
+**V3 Migration:**
+```
+# V2 (deprecated)
+Task('Queen', '...', 'hierarchical-coordinator')
 
-Same as regular swarm: `coder`, `tester`, `researcher`, `system-architect`, etc.
+# V3 (recommended)
+Task('Queen', '...', 'unified-coordinator')
+```
+
+## Worker Agent Types (V3)
+
+Same as regular swarm with V3 additions:
+
+| Type | Purpose | V3 Enhancement |
+|------|---------|----------------|
+| `coder` | Implementation | Q-Learning optimized |
+| `tester` | Testing | Vitest (10x faster) |
+| `researcher` | Investigation | HNSW search (150x faster) |
+| `system-architect` | Design | SONA learning |
+| `security-architect` | Security focus | **V3 NEW** - AIDefence |
+| `neural-optimizer` | SONA optimization | **V3 NEW** |
+| `claims-coordinator` | Work ownership | **V3 NEW** |
 
 ---
 
@@ -530,16 +578,16 @@ hive/worker-[id]/deliverable - Worker outputs
 
 ```bash
 # Check Queen's plan
-npx claude-flow@alpha memory read --namespace "hive/[project]" --key "plan"
+npx claude-flow@v3alpha memory read --namespace "hive/[project]" --key "plan"
 
 # Check worker reports
-npx claude-flow@alpha memory list --namespace "hive/worker-*"
+npx claude-flow@v3alpha memory list --namespace "hive/worker-*"
 
 # Check Queen's evaluations
-npx claude-flow@alpha memory list --namespace "hive/queen"
+npx claude-flow@v3alpha memory list --namespace "hive/queen"
 
 # Verify completion
-npx claude-flow@alpha memory read --namespace "hive/queen" --key "mission-complete"
+npx claude-flow@v3alpha memory read --namespace "hive/queen" --key "mission-complete"
 ```
 
 ---
@@ -570,13 +618,13 @@ After all phases complete and validation passes, Queen records outcomes:
 
 ```bash
 # Record successful hive completion
-npx claude-flow@alpha memory feedback \
+npx claude-flow@v3alpha memory feedback \
   --pattern "hive/[NAMESPACE]/config" \
   --outcome success \
   --reasoningbank
 
 # Include metadata about what worked
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
   --namespace "hive/[NAMESPACE]" \
   --key "learnings" \
   --value '{
@@ -598,7 +646,7 @@ npx claude-flow@alpha memory store \
 If phases failed or required significant cleanup:
 
 ```bash
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
   --namespace "code-quality/failure-patterns" \
   --key "$(date +%Y%m%d)-hive-[brief-description]" \
   --value '{
@@ -620,13 +668,13 @@ Include in Queen's completion phase:
 7️⃣ RECORD OUTCOME (after successful validation):
 
 # Record hive completion
-npx claude-flow@alpha memory feedback \
+npx claude-flow@v3alpha memory feedback \
   --pattern "hive/[NAMESPACE]/config" \
   --outcome success \
   --reasoningbank
 
 # Store learnings for future hives
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
   --namespace "hive/[NAMESPACE]" \
   --key "learnings" \
   --value "{

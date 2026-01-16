@@ -2,23 +2,25 @@
 status: keep
 phase: complete
 type: reference
-version: 2.7.1
-last-updated: 2025-11-27
-title: Claude-Flow Reference Guide
+version: 3.0
+last-updated: 2026-01-16
+title: Claude-Flow Reference Guide (V3)
 author: Claude Code + Human Developer
-tags: [claude-flow, reference, architecture, commands, agents, memory]
+tags: [claude-flow, reference, architecture, commands, agents, memory, v3, claims, skills, routing, unified-coordinator]
 ---
 
-# 🌊 Claude-Flow Reference Guide
+# 🌊 Claude-Flow Reference Guide (V3)
 
-**Version**: 2.7.0-alpha.10 | **Last Updated**: 2025-11-27
+**Version**: 3.0.0-alpha.79 | **Last Updated**: 2026-01-16
 
 > **This is a reference manual.** For workflow guidance and decision trees,
 > see [workflow.md](./workflow.md).
 
 ---
 
-> **Revolutionary AI Coordination**: Execute multi-agent swarms from Claude Code with intelligent coordination, persistent memory, and neural pattern learning.
+> **V3: Next-Generation AI Coordination**: Execute multi-agent swarms with Claims System,
+> Skills System (42+), Q-Learning Routing, UnifiedSwarmCoordinator, HNSW search (150x faster),
+> and SONA self-optimizing learning.
 
 ---
 
@@ -60,7 +62,7 @@ tags: [claude-flow, reference, architecture, commands, agents, memory]
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (V3)
 
 ### Installation
 
@@ -68,42 +70,89 @@ tags: [claude-flow, reference, architecture, commands, agents, memory]
 # 1. Install Claude Code globally (required)
 npm install -g @anthropic-ai/claude-code
 
-# 2. Install claude-flow (alpha channel)
-npm install -g claude-flow@alpha
+# 2. Install claude-flow V3 (v3alpha channel)
+npm install -g claude-flow@v3alpha
 
-# 3. Initialize in your project
+# 3. Initialize in your project (Node.js 20+ REQUIRED)
 cd your-project
-npx claude-flow@alpha init --force
+npx claude-flow@v3alpha init --force
+
+# 4. Optional: Add MCP integration
+claude mcp add claude-flow -- npx claude-flow@v3alpha mcp start
 ```
 
-### First Command
+**V3 Requirements:**
+- **Node.js 20+** (breaking change from V2's Node 18+)
+- npm 9+
+
+### First Command (V3)
 
 ```bash
-# Simple task execution
-npx claude-flow swarm "Build user authentication" --claude
+# Simple task with Q-Learning routing
+npx claude-flow@v3alpha swarm "Build user authentication" --claude
 
-# Complex multi-feature project
-npx claude-flow hive-mind spawn "Build e-commerce platform" --claude
+# Complex project with Claims tracking
+npx claude-flow@v3alpha hive-mind spawn "Build e-commerce platform" --claude
+
+# V3 NEW: Use Skills System (42+ pre-built workflows)
+npx claude-flow@v3alpha skill execute sparc-methodology --context "Add OAuth2"
+
+# V3 NEW: Get AI-recommended agent selection
+npx claude-flow@v3alpha route task "Implement JWT authentication"
 ```
+
+### V3 Key Commands Reference
+
+| Command | Purpose |
+|---------|---------|
+| `issues claim #N --agent X` | Claim work (prevents duplicates) |
+| `issues handoff #N --to X` | Hand work to another agent |
+| `issues steal #N` | Take abandoned/stealable work |
+| `skill list` | List 42+ available skills |
+| `skill execute X` | Execute a skill workflow |
+| `route task "desc"` | Q-Learning agent recommendation |
+| `memory vector-search "q"` | HNSW semantic search (150x faster) |
 
 ### Execution Templates
 
 For spawning swarms with Claude Code's Task tool and guaranteed quality gates:
 
 - **Regular swarms** (3-6 agents, fixed plan): ./swarm-templates.md
-- **Queen-coordinated** (7+ agents, adaptive): ./hive-mind-templates.md
+- **Queen-coordinated** (7-15 agents, adaptive): ./hive-mind-templates.md
 
 These templates provide the 6-step coordination protocol and spawn patterns.
 
-### Key Concepts
+### Key Concepts (V3 Architecture)
 
-**Three Execution Layers**:
+**V3 DDD Bounded Contexts:**
 
-1. **MCP Tools** - Set up coordination infrastructure (topology, memory, hooks)
-2. **Claude Code Task Tool** - Spawn actual working agents with full tool access
-3. **Hooks** - Agents manually call hooks via Bash for coordination
+1. **Core** - Agents, swarms, tasks (UnifiedSwarmCoordinator)
+2. **Memory** - AgentDB, HNSW indexing (150x faster), hybrid backend
+3. **Security** - AIDefence threat detection, Zod validation
+4. **Integration** - agentic-flow bridge, multi-provider LLM routing
+5. **Coordination** - Claims system, consensus protocols, event sourcing
 
-**The Pattern**: MCP coordinates → Task tool executes → Hooks enable memory sharing
+**V3 Execution Pattern:**
+```
+MCP sets up infrastructure
+    → Q-Learning routes to optimal agent
+    → Task tool spawns agent with Claims tracking
+    → Agent executes with hooks coordination
+    → SONA learns from execution results
+    → Event sourcing maintains full audit trail
+```
+
+**V3 vs V2 Key Changes:**
+
+| Feature | V2 | V3 |
+|---------|-----|-----|
+| Coordinators | Multiple (hierarchical, mesh, etc.) | **UnifiedSwarmCoordinator** |
+| Work tracking | Manual | **Claims System** |
+| Agent selection | Manual | **Q-Learning Routing** |
+| Workflows | Manual prompts | **Skills System (42+)** |
+| Vector search | Basic | **HNSW (150x faster)** |
+| Test framework | Jest | **Vitest (10x faster)** |
+| Node.js | 18+ | **20+ required** |
 
 [↑ Back to TOC](#-table-of-contents)
 
@@ -914,41 +963,56 @@ npx claude-flow hive-mind spawn "$(cat docs/prompts/e-commerce-platform.md)" \
 
 ---
 
-## 🤖 Agent Types
+## 🤖 Agent Types (V3)
 
-### Development (8 agents)
+### V3 Core Changes
 
-`coder`, `backend-dev`, `frontend-dev`, `mobile-dev`, `ml-developer`, `sparc-coder`, `base-template-generator`, `cicd-engineer`
+**Coordinator Consolidation (ADR-003):**
+```
+V2 (deprecated):                    V3 (use instead):
+hierarchical-coordinator    →       unified-coordinator
+mesh-coordinator           →       unified-coordinator
+adaptive-coordinator       →       unified-coordinator
+ring-coordinator           →       unified-coordinator
+```
 
-### Architecture & Design (4 agents)
+### Development (10 agents)
+
+`coder`, `backend-dev`, `frontend-dev`, `mobile-dev`, `ml-developer`, `sparc-coder`, `base-template-generator`, `cicd-engineer`, `security-architect` **(V3 NEW)**, `claims-coordinator` **(V3 NEW)**
+
+### Architecture & Design (7 agents)
 
 `system-architect`, `code-analyzer`, `api-docs`, `specification`, `pseudocode`, `architecture`, `refinement`
 
-### Testing & Quality (4 agents)
+### Testing & Quality (5 agents)
 
 `tester`, `production-validator`, `tdd-london-swarm`, `reviewer`, `code-review-swarm`
 
-### Coordination (8 agents)
+**V3 Note**: Tests now use **Vitest** (10x faster than Jest). See migration guide.
 
-`hierarchical-coordinator`, `mesh-coordinator`, `adaptive-coordinator`, `collective-intelligence-coordinator`, `queen-coordinator`, `worker-specialist`, `scout-explorer`, `swarm-memory-manager`
+### Coordination (V3 Simplified - 5 agents)
+
+`unified-coordinator` **(V3 - replaces all below)**, `queen-coordinator`, `worker-specialist`, `scout-explorer`, `swarm-memory-manager`
+
+**Deprecated** (use `unified-coordinator`): `hierarchical-coordinator`, `mesh-coordinator`, `adaptive-coordinator`, `collective-intelligence-coordinator`
 
 ### Consensus & Distributed (6 agents)
 
-`byzantine-coordinator`, `raft-manager`, `gossip-coordinator`, `crdt-synchronizer`, `quorum-manager`, `security-manager`
+`byzantine-coordinator` **(V3 enhanced)**, `raft-manager`, `gossip-coordinator`, `crdt-synchronizer`, `quorum-manager`, `security-manager`
 
-### Performance (5 agents)
+### Performance & Learning (7 agents)
 
-`perf-analyzer`, `performance-benchmarker`, `task-orchestrator`, `memory-coordinator`, `smart-agent`
+`perf-analyzer`, `performance-benchmarker`, `task-orchestrator`, `memory-coordinator`, `smart-agent`, `neural-optimizer` **(V3 NEW - SONA)**, `routing-optimizer` **(V3 NEW - Q-Learning)**
 
-### GitHub & Repository (7 agents)
+### GitHub & Repository (8 agents)
 
 `github-modes`, `pr-manager`, `code-review-swarm`, `issue-tracker`, `release-manager`, `workflow-automation`, `repo-architect`, `multi-repo-swarm`
 
-### Planning & Strategy (4 agents)
+### Planning & Strategy (5 agents)
 
 `planner`, `researcher`, `analyst`, `goal-planner`, `migration-planner`, `swarm-init`
 
-**Total**: 54 specialized agents
+**Total**: 60+ specialized agents (V3 adds ~10 new agents)
 
 [↑ Back to TOC](#-table-of-contents)
 
@@ -968,11 +1032,11 @@ which claude
 # Should show: /usr/local/bin/claude (or similar)
 
 # 2. Check claude-flow version
-npx claude-flow@alpha --version
+npx claude-flow@v3alpha --version
 # Should be v2.7.0-alpha.10+
 
 # 3. Run with explicit npx
-npx claude-flow@alpha swarm "task" --claude
+npx claude-flow@v3alpha swarm "task" --claude
 ```
 
 ---
@@ -1152,7 +1216,7 @@ The following metrics have been **confirmed through testing**:
 3. **Install claude-flow** (if not already):
    ```bash
    npm install -g claude-flow@alpha
-   npx claude-flow@alpha init --force
+   npx claude-flow@v3alpha init --force
    ```
 
 [↑ Back to TOC](#-table-of-contents)
@@ -1205,7 +1269,7 @@ Task('Code Quality Analyzer',
   INPUTS:
   1. Code diff (git diff from this swarm)
   2. CI output (TypeScript, test, lint results)
-  3. Past patterns: npx claude-flow@alpha memory list --namespace "code-quality/failure-patterns"
+  3. Past patterns: npx claude-flow@v3alpha memory list --namespace "code-quality/failure-patterns"
 
   ANALYZE FOR:
   - Coordination issues (did agents honor contracts? type mismatches?)
@@ -1253,7 +1317,7 @@ After LLM analysis:
 
 ```bash
 # For each confirmed finding
-npx claude-flow@alpha memory store \
+npx claude-flow@v3alpha memory store \
   --namespace "code-quality/failure-patterns" \
   --key "$(date +%Y%m%d)-[category]-[brief-description]" \
   --value '{
@@ -1282,14 +1346,14 @@ Every swarm generates learnings. Record outcomes automatically to enable:
 
 ```bash
 # After successful swarm completion
-npx claude-flow@alpha memory feedback \
+npx claude-flow@v3alpha memory feedback \
   --pattern "swarm/[PROJECT]/config" \
   --outcome success \
   --reasoningbank
 # Confidence: 0.87 → 0.90 (+20% adjustment)
 
 # After failed swarm
-npx claude-flow@alpha memory feedback \
+npx claude-flow@v3alpha memory feedback \
   --pattern "swarm/[PROJECT]/config" \
   --outcome failure \
   --reasoningbank
@@ -1302,17 +1366,17 @@ After accumulating 10+ swarms, train the neural module:
 
 ```bash
 # Export swarm history
-npx claude-flow@alpha memory export swarm-history.json \
+npx claude-flow@v3alpha memory export swarm-history.json \
   --namespace "swarm/*" \
   --since "7d"
 
 # Train coordination patterns
-npx claude-flow@alpha neural train \
+npx claude-flow@v3alpha neural train \
   --data ./swarm-history.json \
   --pattern_type "coordination"
 
 # Verify training
-npx claude-flow@alpha neural status
+npx claude-flow@v3alpha neural status
 ```
 
 **What this enables:**
@@ -1324,10 +1388,10 @@ npx claude-flow@alpha neural status
 
 ```bash
 # List patterns by confidence
-npx claude-flow@alpha memory list --namespace "patterns" --sort confidence
+npx claude-flow@v3alpha memory list --namespace "patterns" --sort confidence
 
 # Prune low-confidence patterns (optional)
-npx claude-flow@alpha memory prune --confidence-below 0.3
+npx claude-flow@v3alpha memory prune --confidence-below 0.3
 ```
 
 ### The Feedback Loop
@@ -1389,4 +1453,4 @@ For deeper dives, see:
 ---
 
 **Built with ❤️ for AI-Human collaboration**
-**Claude-Flow v2.7.0-alpha.10** | **MIT License**
+**Claude-Flow v3.0.0-alpha.79** | **MIT License**
