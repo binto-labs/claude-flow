@@ -1,27 +1,28 @@
 ---
-status: keep
-phase: complete
+status: archived
+phase: superseded
 type: guide
-version: 2.0
-last-updated: 2026-01-16
-title: Multi-Agent Workflow Guide (V3)
+version: 1.8
+last-updated: 2025-12-10
+archived: 2026-01-17
+superseded-by: ../binto-flow/workflow.md
+title: Multi-Agent Workflow Guide
 author: Claude Code + Human Developer
-tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-london, github, epic, v3, claims, skills, routing]
+tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-london, github, epic, v2, archived]
 ---
 
-# Multi-Agent Workflow Guide (V3)
+# Multi-Agent Workflow Guide (ARCHIVED)
+
+> **⚠️ ARCHIVED**: This guide uses V2 (`claude-flow@alpha`).
+> **For Claude-Flow V3**, use [binto-flow/workflow.md](../binto-flow/workflow.md) instead.
 
 > **This is your decision driver.** Start here for any multi-agent task.
 > For reference details on "how does X work?", see [claude-flow-guide.md](./claude-flow-guide.md).
->
-> **V3 Updates**: This guide is aligned with Claude-Flow V3.0.0-alpha.79.
-> Key V3 features: Claims System, Skills System, Q-Learning Routing, UnifiedSwarmCoordinator.
 
 ---
 
 ## 📖 Table of Contents
 
-- [V3 Quick Reference](#v3-quick-reference)
 - [Project Planning Layer (Multi-Day Projects)](#project-planning-layer-multi-day-projects)
 - [Pre-Work: What Am I Building?](#pre-work-what-am-i-building)
 - [Forming the Swarm](#forming-the-swarm)
@@ -31,48 +32,6 @@ tags: [workflow, decision-tree, swarm, hive-mind, cleanup, patterns, sparc, tdd-
 - [Validation & Pattern Capture](#validation--pattern-capture)
 - [Commit](#commit)
 - [Continuous Improvement](#continuous-improvement)
-
----
-
-## V3 Quick Reference
-
-### Installation (V3)
-
-```bash
-# Install V3 alpha
-npm install -g claude-flow@v3alpha
-
-# Or use npx (recommended)
-npx claude-flow@v3alpha init --force
-
-# MCP integration
-claude mcp add claude-flow -- npx claude-flow@v3alpha mcp start
-```
-
-### Key V3 Commands
-
-| Purpose | Command |
-|---------|---------|
-| **Claim work** | `npx claude-flow@v3alpha issues claim #123 --agent coder` |
-| **List skills** | `npx claude-flow@v3alpha skill list` |
-| **Route task** | `npx claude-flow@v3alpha route task "description"` |
-| **Start swarm** | `npx claude-flow@v3alpha swarm start --topology mesh` |
-| **Memory store** | `npx claude-flow@v3alpha memory store --namespace X --key Y --value Z` |
-| **HNSW search** | `npx claude-flow@v3alpha memory vector-search "query" --k 10` |
-
-### V3 vs V2 Key Differences
-
-| Feature | V2 | V3 |
-|---------|-----|-----|
-| Work coordination | Manual GitHub issues | **Claims System** (prevents duplicates) |
-| Workflows | Manual prompts | **Skills System** (42+ pre-built) |
-| Agent selection | Manual choice | **Q-Learning Routing** (94% accuracy) |
-| Coordinators | Multiple types | **UnifiedSwarmCoordinator** (single engine) |
-| Vector search | Basic | **HNSW** (150x faster) |
-| Test framework | Jest | **Vitest** (10x faster) |
-| Node.js | 18+ | **20+ required** |
-
-[↑ Back to TOC](#-table-of-contents)
 
 ---
 
@@ -375,38 +334,22 @@ Use these agents for project-layer operations:
 When resuming work on a multi-day project:
 
 ```bash
-# V3: Use Claims System for session recovery
-npx claude-flow@v3alpha issues status #100  # Full Epic state with claims
-npx claude-flow@v3alpha issues claim #101   # Claim next unclaimed issue
-
-# Claims System provides:
-# - Work ownership (who's working on what)
-# - Abandonment detection (stealable after timeout)
-# - Automatic load balancing (rebalance command)
-
-# Combined with GitHub for human context:
+# Have Claude read the Epic and its state
 gh issue view 100 --comments  # Epic with all discussion
 gh issue list --search "epic:100"  # All related issues
-```
+gh pr list --search "closes:#101"  # PRs for issues
 
-**V3 Claims + GitHub Pattern**:
-```bash
-# 1. Check project state via Claims
-npx claude-flow@v3alpha issues status #100
-
-# 2. Claim your next task
-npx claude-flow@v3alpha issues claim #101 --agent coder
-
-# 3. If someone abandoned work, steal it
-npx claude-flow@v3alpha issues steal #102  # Auto-reassigns stealable work
-
-# 4. When handing off to another agent
-npx claude-flow@v3alpha issues handoff #101 --to security-architect
+# Claude now has:
+# - Original project plan (Epic description)
+# - Architectural decisions (Epic + issue comments)
+# - What's done (closed issues)
+# - What's in progress (open PRs)
+# - What's remaining (open issues)
 ```
 
 Or simply: *"Resume work on Epic #100 following workflow.md"*
 
-Claude will read the Epic context via GitHub and Claims status, then continue where you left off.
+Claude will read the Epic context and continue where you left off.
 
 ---
 
@@ -597,35 +540,23 @@ These are also stored in memory namespace \`architecture/decisions\`."
 
 ## Pre-Work: What Am I Building?
 
-### Default Methodology: SPARC (with V3 Skills)
+### Default Methodology: SPARC
 
-All **development tasks** (code changes, features, fixes, refactors) should use or form part of the SPARC process. **V3 provides 42+ pre-built Skills that accelerate SPARC phases.**
+All **development tasks** (code changes, features, fixes, refactors) should use or form part of the SPARC process. Scale the depth to match task complexity:
 
-| Task Type | SPARC Application | V3 Skill |
-|-----------|-------------------|----------|
-| Small fix (< 30 min) | Light spec → Implement → Verify | `/sparc:coder` |
-| Feature (2-4 hours) | Full 5-phase cycle | `@sparc-methodology` |
-| Complex project | Full SPARC with quality gates | `/sparc:swarm-coordinator` |
-| Research/analysis | Research skill | `/sparc:researcher` |
+| Task Type | SPARC Application |
+|-----------|-------------------|
+| Small fix (< 30 min) | Light spec → Implement → Verify |
+| Feature (2-4 hours) | Full 5-phase cycle, each phase sized appropriately |
+| Complex project | Full SPARC with formal quality gates between phases |
+| Research/analysis/questions | SPARC not required - use appropriate approach |
 
-**SPARC Phases (with V3 Skills):**
-1. **Specification**: `/sparc:specification` - Requirements analysis
-2. **Pseudocode**: `/sparc:pseudocode` - Algorithm design
-3. **Architecture**: `/sparc:architect` - System design
-4. **Refinement**: `/sparc:tdd` - TDD implementation
-5. **Completion**: `/sparc:reviewer` - Integration and validation
-
-**V3 Skill Execution:**
-```bash
-# List all available skills
-npx claude-flow@v3alpha skill list
-
-# Execute a specific skill
-npx claude-flow@v3alpha skill execute sparc-methodology --context "Build user auth"
-
-# Or invoke directly in Claude Code
-@sparc-methodology "Implement JWT authentication"
-```
+**SPARC Phases (For Development Work):**
+1. **Specification**: What are we building? What does "done" look like?
+2. **Pseudocode**: How will the algorithm/logic work?
+3. **Architecture**: How do components fit together?
+4. **Refinement**: TDD implementation with iterative improvement
+5. **Completion**: Integration, docs, deployment prep
 
 ### Capturing Architectural Decisions
 
@@ -633,13 +564,13 @@ During SPARC phases (especially Architecture), **store decisions in project memo
 
 ```bash
 # Store architectural decisions
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "architecture/decisions" \
   --key "[decision-name]" \
   --value "[decision and rationale]"
 
 # Store patterns adopted for this project
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "architecture/patterns" \
   --key "[pattern-name]" \
   --value "[how pattern is applied in this project]"
@@ -659,7 +590,7 @@ npx claude-flow@v3alpha memory store \
 
 **Example:**
 ```bash
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "architecture/decisions" \
   --key "auth-strategy" \
   --value "JWT with refresh tokens. Access token TTL: 15min. Refresh: 7 days. Redis for session blacklist. Rationale: Stateless scaling, quick revocation capability."
@@ -678,7 +609,7 @@ Use standardized namespaces so all agents query the same structure:
 
 **Architect publishes module contracts:**
 ```bash
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "architecture/contracts" \
   --key "modules" \
   --value '{
@@ -701,19 +632,19 @@ npx claude-flow@v3alpha memory store \
 **TDD agent queries before starting:**
 ```bash
 # Get my module definition
-npx claude-flow@v3alpha memory read \
+npx claude-flow@alpha memory read \
   --namespace "architecture/contracts" \
   --key "modules" | jq '.modules.UserService'
 
 # Get canonical types file
-npx claude-flow@v3alpha memory read \
+npx claude-flow@alpha memory read \
   --namespace "architecture/contracts" \
   --key "modules" | jq -r '.canonical_types_file'
 ```
 
 **Agent publishes completion status:**
 ```bash
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "swarm/user-service" \
   --key "status" \
   --value '{"phase": "complete", "tests_passing": 12, "gate_passed": true}'
@@ -731,7 +662,7 @@ Before finalizing architecture, explicitly consider these fundamentals. Not all 
 
 **If deviating from a principle, document why:**
 ```bash
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "architecture/decisions" \
   --key "tight-coupling-rationale" \
   --value "Components X and Y tightly coupled intentionally. Rationale: Performance-critical path, <1ms latency requirement. Trade-off accepted."
@@ -856,44 +787,24 @@ How do agents need to coordinate?
         System adjusts based on task complexity
 ```
 
-### Pre-Swarm: Q-Learning Routing (V3 - RECOMMENDED)
+### Pre-Swarm Pattern Query (Optional but Recommended)
 
-**V3's Q-Learning Routing** analyzes your task and recommends optimal agents based on historical success:
-
-```bash
-# V3: Get intelligent agent recommendation
-npx claude-flow@v3alpha route task "Implement JWT authentication with refresh tokens"
-
-# Example output:
-# Recommended Agent: security-architect
-# Confidence: 94%
-# Domain Match: authentication, security, JWT
-# Historical Success: 12/13 similar tasks (92%)
-# Alternative: backend-dev (87% confidence)
-```
-
-### Pre-Swarm Pattern Query (V3 Enhanced)
-
-Before spawning, check what worked before with **HNSW-accelerated search (150x faster)**:
+Before spawning, check what worked before:
 
 ```bash
-# V3: HNSW vector search (150x faster than V2)
-npx claude-flow@v3alpha memory vector-search "[OBJECTIVE-KEYWORDS]" --k 5
+# Find similar past swarms
+npx claude-flow@alpha memory vector-search "[OBJECTIVE-KEYWORDS]" --k 3 --reasoningbank
 
 # Example output:
-# - "user-auth-swarm" (similarity: 0.94) - JWT + Redis session worked well
-# - "login-feature" (similarity: 0.82) - OAuth had integration issues
-# - "auth-refactor" (similarity: 0.71) - Needed extra tester agent
-
-# V3: Search with ReasoningBank integration
-npx claude-flow@v3alpha memory vector-search "[KEYWORDS]" --k 3 --reasoningbank
+# - "user-auth-swarm" (confidence: 0.92) - JWT + Redis session worked well
+# - "login-feature" (confidence: 0.78) - OAuth had integration issues
+# - "auth-refactor" (confidence: 0.65) - Needed extra tester agent
 ```
 
-**Use Q-Learning + Pattern Query to inform:**
-- Agent selection (use recommended agent with highest confidence)
+**Use this to inform:**
+- Agent configuration (add specialists if past swarms struggled)
 - Approach selection (avoid patterns that failed)
 - Anticipate likely failure modes
-- Team composition (add specialists for low-confidence domains)
 
 [↑ Back to TOC](#-table-of-contents)
 
@@ -994,13 +905,13 @@ npx claude-flow@v3alpha memory vector-search "[KEYWORDS]" --k 3 --reasoningbank
 
 ```bash
 # Check swarm status
-npx claude-flow@v3alpha swarm status
+npx claude-flow@alpha swarm status
 
 # Check memory for agent progress
-npx claude-flow@v3alpha memory list --namespace "swarm/*"
+npx claude-flow@alpha memory list --namespace "swarm/*"
 
 # Check specific agent's published work
-npx claude-flow@v3alpha memory read --namespace "swarm/[agent]" --key "[deliverable]"
+npx claude-flow@alpha memory read --namespace "swarm/[agent]" --key "[deliverable]"
 ```
 
 **How the coordination works:** → [claude-flow-guide.md "Memory Coordination"](./claude-flow-guide.md#-memory-coordination)
@@ -1077,7 +988,7 @@ Task('[Category] Fixer',
 
   WHEN DONE:
   [Run relevant CI check]
-  npx claude-flow@v3alpha hooks post-task --task-id "[category]-fixer"
+  npx claude-flow@alpha hooks post-task --task-id "[category]-fixer"
   `,
   'coder'  // or 'tester' for test fixes
 );
@@ -1123,7 +1034,7 @@ Task('[Category] Fixer',
 [
   Task('Type Aligner',
     `Fix TypeScript errors. Publish interface changes to memory:
-    npx claude-flow@v3alpha memory store \\
+    npx claude-flow@alpha memory store \\
       --namespace "cleanup/types" \\
       --key "changes" \\
       --value "[describe changes made]"
@@ -1132,7 +1043,7 @@ Task('[Category] Fixer',
   ),
   Task('Test Updater',
     `Wait for type changes:
-    while ! npx claude-flow@v3alpha memory read \\
+    while ! npx claude-flow@alpha memory read \\
       --namespace "cleanup/types" \\
       --key "changes"; do sleep 5; done
 
@@ -1173,7 +1084,7 @@ npm run type-check && npm test && npm run lint
 > becomes a pattern that helps future swarms avoid the same issue.
 
 ```bash
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "code-quality/failure-patterns" \
   --key "$(date +%Y%m%d)-[brief-description]" \
   --value '{
@@ -1189,7 +1100,7 @@ npx claude-flow@v3alpha memory store \
 **Example:**
 
 ```bash
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "code-quality/failure-patterns" \
   --key "20251127-type-mismatch-frontend-backend" \
   --value '{
@@ -1205,7 +1116,7 @@ npx claude-flow@v3alpha memory store \
 **3. Record outcome for learning:**
 
 ```bash
-npx claude-flow@v3alpha memory feedback \
+npx claude-flow@alpha memory feedback \
   --pattern "swarm/[PROJECT]/config" \
   --outcome success \
   --reasoningbank
@@ -1290,10 +1201,10 @@ Patterns captured: coordination/type-mismatch-frontend-backend
 
 ```bash
 # Review accumulated patterns
-npx claude-flow@v3alpha memory list --namespace "code-quality/failure-patterns"
+npx claude-flow@alpha memory list --namespace "code-quality/failure-patterns"
 
 # Check pattern confidence scores
-npx claude-flow@v3alpha memory list --namespace "patterns" --sort confidence
+npx claude-flow@alpha memory list --namespace "patterns" --sort confidence
 ```
 
 **Ask yourself:**
@@ -1307,17 +1218,17 @@ After 10+ swarms, train the neural module:
 
 ```bash
 # Export swarm history
-npx claude-flow@v3alpha memory export swarm-history.json \
+npx claude-flow@alpha memory export swarm-history.json \
   --namespace "swarm/*" \
   --since "7d"
 
 # Train coordination patterns
-npx claude-flow@v3alpha neural train \
+npx claude-flow@alpha neural train \
   --data ./swarm-history.json \
   --pattern_type "coordination"
 
 # Verify training
-npx claude-flow@v3alpha neural status
+npx claude-flow@alpha neural status
 ```
 
 **What this enables:**
@@ -1329,10 +1240,10 @@ npx claude-flow@v3alpha neural status
 
 ```bash
 # Review pattern confidence scores
-npx claude-flow@v3alpha memory list --namespace "patterns" --sort confidence
+npx claude-flow@alpha memory list --namespace "patterns" --sort confidence
 
 # Prune low-confidence patterns (optional)
-npx claude-flow@v3alpha memory prune --confidence-below 0.3
+npx claude-flow@alpha memory prune --confidence-below 0.3
 ```
 
 - Review which patterns improved swarm success
@@ -1433,4 +1344,4 @@ When forming a swarm, Claude Code should:
 
 ---
 
-**Version**: 2.0.0 (V3) | **Last Updated**: 2026-01-16
+**Version**: 1.6.0 | **Last Updated**: 2025-12-05

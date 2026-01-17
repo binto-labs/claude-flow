@@ -1,15 +1,21 @@
 ---
-status: keep
-phase: complete
+status: archived
+phase: superseded
 type: guide
 version: 1.0
 last-updated: 2025-11-27
+archived: 2026-01-17
+superseded-by: ../binto-flow/
 title: Multi-Agent Documentation - README
 author: Claude Code + Human Developer
-tags: [readme, setup, portability, multi-agent]
+tags: [readme, setup, portability, multi-agent, v2, archived]
 ---
 
-# Multi-Agent Documentation
+# Multi-Agent Documentation (ARCHIVED)
+
+> **⚠️ ARCHIVED**: This folder contains V2 templates using `claude-flow@alpha`.
+> **For Claude-Flow V3**, use [binto-flow/](../binto-flow/) instead.
+> V3 uses `@v3alpha`, unified-coordinator, Claims System, and SONA learning.
 
 **Self-contained folder for multi-agent swarm coordination methodology.**
 

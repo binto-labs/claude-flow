@@ -1,23 +1,25 @@
 ---
-status: keep
-phase: complete
+status: archived
+phase: superseded
 type: reference
-version: 2.0
-last-updated: 2026-01-16
-title: Swarm Templates (V3)
+version: 1.5
+last-updated: 2025-12-05
+archived: 2026-01-17
+superseded-by: ../binto-flow/swarm-templates.md
+title: Swarm Templates
 author: Claude Code + Human Developer
-tags: [swarm, templates, agents, coordination, cleanup, patterns, tdd-london, sparc, v3, unified-coordinator, claims, routing]
+tags: [swarm, templates, agents, coordination, cleanup, patterns, tdd-london, sparc, v2, archived]
 ---
 
-# Swarm Templates (V3)
+# Swarm Templates (ARCHIVED)
+
+> **⚠️ ARCHIVED**: These templates use V2 (`claude-flow@alpha`).
+> **For Claude-Flow V3**, use [binto-flow/swarm-templates.md](../binto-flow/swarm-templates.md) instead.
 
 Complete guide for spawning coordinated swarms with quality gates.
 
 > **When to use these templates:** See [workflow.md](./workflow.md) for decision guidance.
 > **For reference details:** See [claude-flow-guide.md](./claude-flow-guide.md) for architecture and commands.
->
-> **V3 Updates**: This guide is aligned with Claude-Flow V3.0.0-alpha.79.
-> Key changes: UnifiedSwarmCoordinator, Q-Learning routing, Claims integration, Vitest.
 
 ---
 
@@ -86,18 +88,18 @@ See ./claude-flow-guide.md
 # ═══════════════════════════════════════════════════════════════
 
 # 1️⃣ BEFORE starting ANY work:
-npx claude-flow@v3alpha hooks pre-task --description "[AGENT-ROLE] work"
-npx claude-flow@v3alpha hooks session-restore --session-id "swarm-[PROJECT-NAME]"
+npx claude-flow@alpha hooks pre-task --description "[AGENT-ROLE] work"
+npx claude-flow@alpha hooks session-restore --session-id "swarm-[PROJECT-NAME]"
 
 # 2️⃣ READ context from swarm memory:
-npx claude-flow@v3alpha memory read --namespace "swarm/[PROJECT]" --key "plan" || true
+npx claude-flow@alpha memory read --namespace "swarm/[PROJECT]" --key "plan" || true
 # Also read any dependency keys you're waiting for
 
 # 3️⃣ YOUR TASKS:
 # [List specific, measurable tasks here]
 
 # 4️⃣ AFTER EVERY file you create/edit:
-npx claude-flow@v3alpha hooks post-edit --file "[FILE-PATH]" --memory-key "swarm/[AGENT]/progress"
+npx claude-flow@alpha hooks post-edit --file "[FILE-PATH]" --memory-key "swarm/[AGENT]/progress"
 
 # 📋 FOR DOCUMENTATION FILES: Add YAML frontmatter per ./document-classification-guide.md
 # All .md files MUST have this header:
@@ -111,7 +113,7 @@ npx claude-flow@v3alpha hooks post-edit --file "[FILE-PATH]" --memory-key "swarm
 # ---
 
 # 5️⃣ PUBLISH results for other agents:
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "swarm/[AGENT-NAME]" \
   --key "[DELIVERABLE-NAME]" \
   --value "[RESULT-OR-FILE-CONTENT]"
@@ -124,8 +126,8 @@ npx claude-flow@v3alpha memory store \
 # - Technology choices (switched libraries, changed frameworks)
 
 # 6️⃣ AFTER completing ALL tasks:
-npx claude-flow@v3alpha hooks post-task --task-id "[AGENT-ROLE]"
-npx claude-flow@v3alpha hooks session-end --export-metrics true
+npx claude-flow@alpha hooks post-task --task-id "[AGENT-ROLE]"
+npx claude-flow@alpha hooks session-end --export-metrics true
 ```
 
 ---
@@ -140,13 +142,13 @@ You are the [AGENT-NAME] agent for [PROJECT-NAME] swarm.
 🔧 COORDINATION PROTOCOL (CRITICAL - EXECUTE EVERY STEP):
 
 1️⃣ BEFORE starting ANY work:
-npx claude-flow@v3alpha hooks pre-task --description "[AGENT-ROLE] work"
-npx claude-flow@v3alpha hooks session-restore --session-id "swarm-[PROJECT]"
+npx claude-flow@alpha hooks pre-task --description "[AGENT-ROLE] work"
+npx claude-flow@alpha hooks session-restore --session-id "swarm-[PROJECT]"
 
 2️⃣ READ context:
 [For first agent]: Read design doc or requirements
 [For dependent agents]: Wait for dependency:
-while ! npx claude-flow@v3alpha memory read \
+while ! npx claude-flow@alpha memory read \
  --namespace "swarm/[DEPENDENCY-AGENT]" \
  --key "[DEPENDENCY-KEY]"; do
 echo "Waiting for [dependency]..."
@@ -161,7 +163,7 @@ done
 - Run tests: npm test -- [test-pattern]
 
 4️⃣ AFTER EVERY file you edit:
-npx claude-flow@v3alpha hooks post-edit --file "[file-path]" --memory-key "swarm/[agent]/progress"
+npx claude-flow@alpha hooks post-edit --file "[file-path]" --memory-key "swarm/[agent]/progress"
 
 📋 FOR ANY .md FILES YOU CREATE:
 Add YAML frontmatter at the top:
@@ -175,14 +177,14 @@ title: [Document Title]
 ---
 
 5️⃣ PUBLISH results:
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
  --namespace "swarm/[AGENT-NAME]" \
  --key "[DELIVERABLE]" \
  --value "[RESULT]"
 
 6️⃣ AFTER completing ALL tasks:
-npx claude-flow@v3alpha hooks post-task --task-id "[AGENT-ROLE]"
-npx claude-flow@v3alpha hooks session-end --export-metrics true
+npx claude-flow@alpha hooks post-task --task-id "[AGENT-ROLE]"
+npx claude-flow@alpha hooks session-end --export-metrics true
 
 QUALITY GATES (hooks will enforce):
 
@@ -271,8 +273,8 @@ You are the architect agent for [PROJECT] swarm.
 [FULL 6-STEP PROTOCOL HERE]
 
 # First, check existing architectural decisions for consistency
-npx claude-flow@v3alpha memory list --namespace "architecture/*"
-npx claude-flow@v3alpha memory read --namespace "architecture/decisions" --key "*" || true
+npx claude-flow@alpha memory list --namespace "architecture/*"
+npx claude-flow@alpha memory read --namespace "architecture/decisions" --key "*" || true
 
 YOUR TASKS:
 - Design system architecture
@@ -299,12 +301,12 @@ VERIFICATION GATE:
 npx tsc --noEmit contracts.ts  # Must pass before other agents start
 
 CAPTURE DECISIONS (for future swarm consistency):
-npx claude-flow@v3alpha memory store \\
+npx claude-flow@alpha memory store \\
   --namespace "architecture/decisions" \\
   --key "[decision-name]" \\
   --value "[decision + rationale]"
 
-npx claude-flow@v3alpha memory store \\
+npx claude-flow@alpha memory store \\
   --namespace "architecture/patterns" \\
   --key "[pattern-name]" \\
   --value "[how applied in this project]"
@@ -330,14 +332,14 @@ You are the coder agent for [PROJECT] swarm.
 [FULL 6-STEP PROTOCOL HERE]
 
 WAIT FOR:
-while ! npx claude-flow@v3alpha memory read \\
+while ! npx claude-flow@alpha memory read \\
   --namespace "swarm/architect" \\
   --key "interfaces"; do
   sleep 10
 done
 
 # Check for test contracts from tester agent (if available)
-npx claude-flow@v3alpha memory read \\
+npx claude-flow@alpha memory read \\
   --namespace "swarm/tester" \\
   --key "contracts" || true
 
@@ -376,7 +378,7 @@ Follow the London School approach:
 [FULL 6-STEP PROTOCOL HERE]
 
 WAIT FOR:
-while ! npx claude-flow@v3alpha memory read \\
+while ! npx claude-flow@alpha memory read \\
   --namespace "swarm/coder" \\
   --key "implementation-complete"; do
   sleep 10
@@ -389,7 +391,7 @@ YOUR TASKS:
 - Publish test contracts to swarm memory
 
 Mock Contract Format:
-npx claude-flow@v3alpha memory store \\
+npx claude-flow@alpha memory store \\
   --namespace "swarm/tester" \\
   --key "contracts" \\
   --value '{"ServiceName": {"method": {"input": "type", "output": "type"}}}'
@@ -419,7 +421,7 @@ owns: [src/[module].ts, src/__tests__/[module].test.ts]
 [FULL 6-STEP PROTOCOL HERE]
 
 WAIT FOR Architect:
-while ! npx claude-flow@v3alpha memory read \\
+while ! npx claude-flow@alpha memory read \\
   --namespace "swarm/architect" \\
   --key "contracts"; do
   sleep 10
@@ -468,8 +470,8 @@ You test CROSS-MODULE interactions after individual modules are complete.
 [FULL 6-STEP PROTOCOL HERE]
 
 WAIT FOR ALL module agents:
-while ! npx claude-flow@v3alpha memory read --namespace "swarm/module-a" --key "implementation-complete"; do sleep 10; done
-while ! npx claude-flow@v3alpha memory read --namespace "swarm/module-b" --key "implementation-complete"; do sleep 10; done
+while ! npx claude-flow@alpha memory read --namespace "swarm/module-a" --key "implementation-complete"; do sleep 10; done
+while ! npx claude-flow@alpha memory read --namespace "swarm/module-b" --key "implementation-complete"; do sleep 10; done
 # ... wait for all modules
 
 📜 IMPORT FROM CONTRACTS:
@@ -502,9 +504,9 @@ You are the reviewer agent for [PROJECT] swarm.
 [FULL 6-STEP PROTOCOL HERE]
 
 WAIT FOR ALL:
-while ! npx claude-flow@v3alpha memory read --namespace "swarm/architect" --key "complete"; do sleep 10; done
-while ! npx claude-flow@v3alpha memory read --namespace "swarm/coder" --key "implementation-complete"; do sleep 10; done
-while ! npx claude-flow@v3alpha memory read --namespace "swarm/tester" --key "tests-passing"; do sleep 10; done
+while ! npx claude-flow@alpha memory read --namespace "swarm/architect" --key "complete"; do sleep 10; done
+while ! npx claude-flow@alpha memory read --namespace "swarm/coder" --key "implementation-complete"; do sleep 10; done
+while ! npx claude-flow@alpha memory read --namespace "swarm/tester" --key "tests-passing"; do sleep 10; done
 
 YOUR TASKS:
 - Run FULL validation: ../../scripts/validate.sh
@@ -603,49 +605,20 @@ PUBLISHES:
 
 ---
 
-## Common Agent Types (V3)
+## Common Agent Types
 
-| Type               | Use For                       | V3 Notes |
-| ------------------ | ----------------------------- | -------- |
-| `system-architect` | Design, structure, code-based contracts | Enhanced with SONA learning |
-| `coder`            | Implementation (single module, no TDD ownership) | Q-Learning optimized |
-| `tdd-london-swarm` | TDD-Dev agent: owns BOTH tests AND impl for a module | Vitest integration |
-| `tester`           | Generic testing (prefer `tdd-london-swarm` instead) | Vitest (10x faster) |
-| `reviewer`         | Validation, QA, commits       | AIDefence security scanning |
-| `researcher`       | Analysis, investigation       | HNSW-accelerated search |
-| `backend-dev`      | API, database work            | Q-Learning optimized |
-| `sparc-coord`      | SPARC methodology orchestration | Skills integration |
-| `security-architect` | Security-focused architecture | **V3 NEW** |
-| `claims-coordinator` | Work ownership management | **V3 NEW** |
-| `neural-optimizer` | SONA-based optimization | **V3 NEW** |
-
-**V3 Coordinator Changes:**
-```
-V2 (Multiple coordinators):          V3 (Unified):
-- hierarchical-coordinator     →     unified-coordinator
-- mesh-coordinator             →     unified-coordinator
-- adaptive-coordinator         →     unified-coordinator
-- ring-coordinator             →     unified-coordinator
-```
-
-All topologies now handled by `UnifiedSwarmCoordinator` (ADR-003).
+| Type               | Use For                       |
+| ------------------ | ----------------------------- |
+| `system-architect` | Design, structure, code-based contracts |
+| `coder`            | Implementation (single module, no TDD ownership) |
+| `tdd-london-swarm` | TDD-Dev agent: owns BOTH tests AND impl for a module |
+| `tester`           | Generic testing (prefer `tdd-london-swarm` instead) |
+| `reviewer`         | Validation, QA, commits       |
+| `researcher`       | Analysis, investigation       |
+| `backend-dev`      | API, database work            |
+| `sparc-coord`      | SPARC methodology orchestration |
 
 > **Multi-Module TDD**: For swarms with multiple modules, use `tdd-london-swarm` as TDD-Dev agents - each owns both tests AND implementation for their module. This preserves the RED-GREEN-REFACTOR loop. See "TDD-Dev Agent" template above.
-
-### V3 Pre-Spawn: Q-Learning Routing
-
-Before selecting agents manually, use Q-Learning routing:
-
-```bash
-# Get AI-recommended agent for your task
-npx claude-flow@v3alpha route task "Build REST API with authentication"
-
-# Output:
-# Recommended Agent: backend-dev
-# Confidence: 91%
-# Domain Match: REST, API, authentication
-# Historical Success: 15/17 similar tasks (88%)
-```
 
 ---
 
@@ -655,7 +628,7 @@ After swarm completes:
 
 ```bash
 # Check memory coordination
-npx claude-flow@v3alpha memory list --namespace "swarm/*"
+npx claude-flow@alpha memory list --namespace "swarm/*"
 
 # Check quality gates
 npm run type-check && npm test && npm run lint
@@ -789,7 +762,7 @@ YOUR TASKS:
 
 # 1. Acquire validation lock (wait if someone else has it)
 echo "Acquiring validation lock..."
-while ! npx claude-flow@v3alpha memory store \
+while ! npx claude-flow@alpha memory store \
   --namespace "swarm/validation" \
   --key "lock" \
   --value "[AGENT-ID]" \
@@ -804,7 +777,7 @@ echo "Running validation (lock acquired)..."
 VALIDATION_RESULT=$?
 
 # 3. Release lock
-npx claude-flow@v3alpha memory delete \
+npx claude-flow@alpha memory delete \
   --namespace "swarm/validation" \
   --key "lock"
 
@@ -812,7 +785,7 @@ npx claude-flow@v3alpha memory delete \
 if [ $VALIDATION_RESULT -eq 0 ]; then
   echo "✅ Validation passed!"
   # Publish success
-  npx claude-flow@v3alpha memory store \
+  npx claude-flow@alpha memory store \
     --namespace "swarm/[AGENT-ID]" \
     --key "validation-passed" \
     --value "true"
@@ -885,7 +858,7 @@ Task('TypeScript Fixer',
 
   WHEN DONE:
   npm run type-check  # Must exit 0
-  npx claude-flow@v3alpha hooks post-task --task-id "typescript-fixer"
+  npx claude-flow@alpha hooks post-task --task-id "typescript-fixer"
   `,
   'coder'
 );
@@ -910,7 +883,7 @@ Task('Test Fixer',
 
   WHEN DONE:
   npm test  # Must exit 0
-  npx claude-flow@v3alpha hooks post-task --task-id "test-fixer"
+  npx claude-flow@alpha hooks post-task --task-id "test-fixer"
   `,
   'tester'
 );
@@ -937,7 +910,7 @@ Task('Coverage Fixer',
 
   WHEN DONE:
   npm test -- --coverage  # Must show 90%+ coverage
-  npx claude-flow@v3alpha hooks post-task --task-id "coverage-fixer"
+  npx claude-flow@alpha hooks post-task --task-id "coverage-fixer"
   `,
   'tester'
 );
@@ -963,7 +936,7 @@ Task('Lint Fixer',
 
   WHEN DONE:
   npm run lint  # Must exit 0
-  npx claude-flow@v3alpha hooks post-task --task-id "lint-fixer"
+  npx claude-flow@alpha hooks post-task --task-id "lint-fixer"
   `,
   'coder'
 );
@@ -979,7 +952,7 @@ Task('Lint Fixer',
   Task('Type Aligner',
     `Fix TypeScript errors. After fixing, publish interface changes:
 
-    npx claude-flow@v3alpha memory store \\
+    npx claude-flow@alpha memory store \\
       --namespace "cleanup/types" \\
       --key "changes" \\
       --value "[describe what interfaces/types changed]"
@@ -993,7 +966,7 @@ Task('Lint Fixer',
     `Wait for type changes, then update tests:
 
     # Wait for Type Aligner
-    while ! npx claude-flow@v3alpha memory read \\
+    while ! npx claude-flow@alpha memory read \\
       --namespace "cleanup/types" \\
       --key "changes"; do
       echo "Waiting for type changes..."
@@ -1001,7 +974,7 @@ Task('Lint Fixer',
     done
 
     # Read what changed
-    npx claude-flow@v3alpha memory read \\
+    npx claude-flow@alpha memory read \\
       --namespace "cleanup/types" \\
       --key "changes"
 
@@ -1018,7 +991,7 @@ Task('Lint Fixer',
 > **Critical:** Capturing failure patterns enables continuous improvement.
 
 ```bash
-npx claude-flow@v3alpha memory store \
+npx claude-flow@alpha memory store \
   --namespace "code-quality/failure-patterns" \
   --key "$(date +%Y%m%d)-[brief-description]" \
   --value '{
@@ -1037,7 +1010,7 @@ Add to Reviewer agent or run manually after swarm succeeds:
 
 ```bash
 # Record successful swarm completion
-npx claude-flow@v3alpha memory feedback \
+npx claude-flow@alpha memory feedback \
   --pattern "swarm/[PROJECT]/config" \
   --outcome success \
   --reasoningbank
