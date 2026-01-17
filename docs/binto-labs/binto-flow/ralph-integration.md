@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: guide
-version: 2.0
+version: 2.1
 last-updated: 2026-01-17
 title: Ralph Integration for Binto-Flow Agents
 author: Claude Code + Human Developer
@@ -61,56 +61,21 @@ Agent spawned → Does work → Verifies → Fails? → Fix → Verify → Pass 
 
 ---
 
-## Option 1: Claude Code Ralph Plugin (Recommended)
+## What Is Ralph Wiggum?
 
-If the Ralph plugin is available in Claude Code:
-
-### Agent Prompt Template
-
-```markdown
-You are the [AGENT-NAME] agent for the [PROJECT] swarm.
-
-## 🔧 COORDINATION PROTOCOL (3-step)
-
-### 1️⃣ READ context:
-```bash
-npx claude-flow@v3alpha memory read --namespace "swarm/[PROJECT]" --key "contracts"
-```
-
-## 🔁 RALPH LOOP (iterate until done)
-
-Use the Ralph plugin to ensure completion:
+Ralph Wiggum is fundamentally **a bash loop at the CLI level**:
 
 ```bash
-/ralph-loop "
-Implement [SPECIFIC DELIVERABLE] following contracts.ts.
-
-VERIFICATION (must ALL pass before done):
-- npx tsc --noEmit returns 0 errors
-- npm test -- src/[module] all passing
-- Files created: [list expected files]
-
-After EACH attempt:
-1. Run verification commands
-2. If failures: read errors, fix, retry
-3. Only output <promise>CODER_COMPLETE</promise> when ALL pass
-" --max-iterations 10 --completion-promise "CODER_COMPLETE"
+while true; do cat PROMPT.md | claude; done
 ```
 
-### 3️⃣ PUBLISH results:
-```bash
-npx claude-flow@v3alpha memory store \
-  --namespace "swarm/[AGENT]" \
-  --key "deliverable" \
-  --value "[summary]"
-```
+**Important:** This CLI loop pattern does NOT work inside agent prompts. Agents can't spawn a loop around themselves.
 
-(Hooks handle post-edit and session-end automatically!)
-```
+**What we CAN do:** Embed the iteration *logic* in the agent prompt itself, making the agent iterate internally before claiming completion.
 
 ---
 
-## Option 2: Prompt-Based Self-Loop (No Plugin Required)
+## Option 1: Prompt-Based Self-Loop (Recommended)
 
 Embed iteration logic directly in the agent prompt:
 
@@ -189,7 +154,7 @@ npx claude-flow@v3alpha memory store \
 
 ---
 
-## Option 3: AGENTS.md + Verification Script
+## Option 2: AGENTS.md + Verification Script
 
 Create project-level files that all agents reference:
 
@@ -385,7 +350,7 @@ When spawning the swarm, each agent gets Ralph-enhanced prompt:
 
 ## Integration Checklist
 
-- [ ] Choose integration option (Plugin, Prompt-based, or AGENTS.md)
+- [ ] Choose integration option (Prompt-based or AGENTS.md)
 - [ ] Update agent templates with Ralph loop pattern
 - [ ] Define completion promises for each agent type
 - [ ] Set appropriate max-iterations (10 is good default)
@@ -394,12 +359,31 @@ When spawning the swarm, each agent gets Ralph-enhanced prompt:
 
 ---
 
-## Sources
+## CLI-Level Ralph (Different Use Case)
 
-- [ghuntley/how-to-ralph-wiggum](https://github.com/ghuntley/how-to-ralph-wiggum) - Original methodology
-- [anthropics/claude-code/plugins/ralph-wiggum](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) - Official Claude Code plugin
+The original Ralph Wiggum technique (`while true; do cat PROMPT.md | claude; done`)
+is for **autonomous overnight runs** where you want Claude to keep working until a
+task is fully complete across multiple context windows.
+
+**When to use CLI-level Ralph:**
+- Greenfield projects from specs
+- Overnight builds
+- Multi-hour refactors
+- Single-agent deep work
+
+**When to use prompt-based iteration (this doc):**
+- Multi-agent swarms (agents can't run CLI loops)
+- Coordinated work requiring memory sharing
+- Quality-gated deliverables
 
 ---
 
-**Version**: 2.0 | **Last Updated**: 2026-01-17
+## Sources
+
+- [ghuntley/how-to-ralph-wiggum](https://github.com/ghuntley/how-to-ralph-wiggum) - Original methodology
+- [anthropics/claude-code/plugins/ralph-wiggum](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum) - Official Claude Code plugin (CLI-level)
+
+---
+
+**Version**: 2.1 | **Last Updated**: 2026-01-17
 
