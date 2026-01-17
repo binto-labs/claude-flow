@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: reference
-version: 1.0
+version: 2.0
 last-updated: 2026-01-17
 title: V3 Reference (Binto-Flow)
 author: Claude Code + Human Developer
@@ -57,26 +57,24 @@ npx claude-flow@v3alpha route task "Build REST API with authentication"
 npx claude-flow@v3alpha route task "Add OAuth2 login" --domain auth
 ```
 
-### Hooks (6-Step Protocol)
+### Hooks (Mostly Automatic in V3)
+
+**The `.claude/settings.json` handles most hooks automatically:**
+
+| Hook | When | Configured In |
+|------|------|---------------|
+| `pre-edit` | Before Write/Edit | PreToolUse |
+| `post-edit` | After Write/Edit | PostToolUse |
+| `session-end` | On Stop | Stop |
+
+**Manual hooks (optional, for explicit control):**
 
 ```bash
-# 1️⃣ Before task
-npx claude-flow@v3alpha hooks pre-task --description "[task description]"
-
-# Session restore
-npx claude-flow@v3alpha hooks session-restore --session-id "[session-id]"
-
-# 4️⃣ After file edit
-npx claude-flow@v3alpha hooks post-edit --file "[file-path]" --memory-key "[key]"
-
-# 6️⃣ After task complete
-npx claude-flow@v3alpha hooks post-task --task-id "[task-id]"
-
-# Session end
-npx claude-flow@v3alpha hooks session-end --export-metrics true
-
 # Notify other agents
 npx claude-flow@v3alpha hooks notify --message "[message]"
+
+# Manual session export (rarely needed)
+npx claude-flow@v3alpha hooks session-end --export-metrics true
 ```
 
 ### Memory
@@ -185,17 +183,38 @@ npx claude-flow@v3alpha hooks intelligence_pattern-search --query "[query]"
 
 ## V3 Architecture
 
-### Daemon vs Hooks
+### Hook Configuration (`.claude/settings.json`)
 
-| Component | Purpose | Activation |
-|-----------|---------|------------|
-| **Daemon** | Background workers (audit, optimize, map) | `daemon start` |
-| **Hooks** | Intercept Claude Code operations | `.claude/settings.json` OR explicit npx |
-| **SONA** | Auto-learning from hook execution | Runs within hooks |
+V3 hooks are pre-configured to run automatically:
 
-**Key insight:** Daemon does NOT run hooks automatically. Hooks require either:
-1. Configuration in `.claude/settings.json` (PreToolUse/PostToolUse)
-2. Explicit npx commands in agent prompts
+```json
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [{
+        "command": "npx claude-flow@alpha hooks pre-edit --file '{}' --auto-assign-agents true --load-context true"
+      }]
+    }],
+    "PostToolUse": [{
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [{
+        "command": "npx claude-flow@alpha hooks post-edit --file '{}' --format true --update-memory true"
+      }]
+    }],
+    "Stop": [{
+      "hooks": [{
+        "command": "npx claude-flow@alpha hooks session-end --generate-summary true --persist-state true --export-metrics true"
+      }]
+    }]
+  }
+}
+```
+
+**This means:**
+- Every file operation triggers context loading and memory updates
+- Session metrics are exported automatically on completion
+- Agents don't need to manually call these hooks
 
 ### Unified Coordinator
 
@@ -310,11 +329,10 @@ npm test -- --coverage
 |--------|--------|
 | Package | `@alpha` → `@v3alpha` |
 | Coordinators | Use `unified-coordinator` for all |
+| **Protocol** | **6-step → 3-step** (hooks are automatic) |
 | Agent routing | Consider `route task` before spawning |
 | Multi-session | Use Claims System |
-| Templates | Still required (hooks don't auto-run) |
-| 6-step protocol | Still required |
-| Two-step workflow | Still required |
+| Templates | Still required (two-step workflow) |
 
 ---
 
@@ -327,7 +345,7 @@ npm test -- --coverage
 cat .claude/settings.json | jq '.hooks'
 ```
 
-2. If not configured, use explicit npx commands in prompts
+2. Verify hooks are configured for Write/Edit operations
 
 ### Memory Not Found
 
@@ -365,7 +383,9 @@ npx claude-flow@v3alpha issues release #[issue] --force
 - [Workflow Guide](./workflow.md)
 - [Swarm Templates](./swarm-templates.md)
 - [Hive-Mind Templates](./hive-mind-templates.md)
+- [Ralph Integration](./ralph-integration.md)
 
 ---
 
-**Version**: 1.0 | **Last Updated**: 2026-01-17
+**Version**: 2.0 | **Last Updated**: 2026-01-17
+

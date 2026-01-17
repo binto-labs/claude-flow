@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: guide
-version: 1.0
+version: 2.0
 last-updated: 2026-01-17
 title: Workflow Guide (Binto-Flow V3)
 author: Claude Code + Human Developer
@@ -36,7 +36,7 @@ tags: [workflow, decision-tree, swarm, hive-mind, v3, binto-flow]
 │                                                                  │
 │ Verify the prompt includes:                                      │
 │ ✓ npx claude-flow@v3alpha (not @alpha)                           │
-│ ✓ 6-step protocol (pre-task → post-task)                         │
+│ ✓ 3-step protocol (READ → WORK → PUBLISH)                        │
 │ ✓ Quality gates (TypeScript 0 errors, tests passing)             │
 │ ✓ Single-message spawning (all agents in one message)            │
 │ ✓ Memory read/store commands for coordination                    │
@@ -49,6 +49,34 @@ tags: [workflow, decision-tree, swarm, hive-mind, v3, binto-flow]
 │                                                                  │
 │ Claude executes with all commands included                       │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 3-Step Protocol (Reduced from 6)
+
+**Why only 3 steps?** The `.claude/settings.json` hooks handle the rest:
+
+| What | How It's Handled |
+|------|------------------|
+| Pre-task assignment | ✅ **AUTOMATIC** via PreToolUse hooks |
+| Session restore | ✅ **AUTOMATIC** via PreToolUse hooks |
+| Post-edit memory updates | ✅ **AUTOMATIC** via PostToolUse hooks |
+| Session end + metrics | ✅ **AUTOMATIC** via Stop hooks |
+
+**Your agents only need:**
+
+```bash
+# 1️⃣ READ context (from other agents)
+npx claude-flow@v3alpha memory read --namespace "swarm/..." --key "..."
+
+# 2️⃣ WORK (hooks fire automatically on every file op)
+# - Implement features
+# - Run tests
+# - Fix errors
+
+# 3️⃣ PUBLISH results (for other agents)
+npx claude-flow@v3alpha memory store --namespace "swarm/..." --key "..." --value "..."
 ```
 
 ---
@@ -207,7 +235,7 @@ Did CI pass?
         └── Re-plan, capture failure pattern
 ```
 
-See [swarm-templates.md "Cleanup Phase"](./swarm-templates.md#cleanup-phase) for fixer templates.
+See [swarm-templates.md "Cleanup Phase"](./swarm-templates.md#cleanup-phase-post-swarm-fixing) for fixer templates.
 
 ---
 
@@ -239,11 +267,12 @@ V3's SONA also auto-learns from hooks, but explicit capture is still valuable.
 | Decide what to build | Decision trees | This file |
 | Pre-work (optional) | Q-Learning routing, pattern search | This file |
 | Generate prompt | Use templates | swarm-templates.md or hive-mind-templates.md |
-| Review prompt | Verify 6-step protocol | This file |
+| Review prompt | Verify 3-step protocol | This file |
 | Execute | Run reviewed prompt | - |
 | Triage failures | Categorize and fix | swarm-templates.md |
 | Record patterns | Memory store | This file |
 
 ---
 
-**Version**: 1.0 | **Last Updated**: 2026-01-17
+**Version**: 2.0 | **Last Updated**: 2026-01-17
+

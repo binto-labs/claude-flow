@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: guide
-version: 1.0
+version: 2.0
 last-updated: 2026-01-17
 title: Binto-Flow - Multi-Agent Orchestration for Claude-Flow V3
 author: Claude Code + Human Developer
@@ -24,8 +24,7 @@ rewritten for V3.
 ## The Problem We Solve
 
 **Claude Code skips steps.** Without explicit instructions, Claude Code will:
-- Forget to run hooks (pre-task, post-edit, post-task)
-- Not coordinate agents via memory
+- Forget to coordinate agents via memory
 - Spawn agents in separate messages (breaking coordination)
 - Skip quality gates
 
@@ -37,15 +36,21 @@ rewritten for V3.
 
 This "forcing function" ensures Claude Code executes the complete coordination protocol.
 
-## Why Templates Still Matter in V3
+## Why 3 Steps Instead of 6?
 
-V3 improves the *intelligence* of hooks (SONA learning, Q-Learning routing, HNSW search),
-but **does not automatically run them**. Hooks are executed via:
+V3 hooks are pre-configured in `.claude/settings.json`:
 
-1. **`.claude/settings.json`** — Claude Code's native PreToolUse/PostToolUse hooks
-2. **Explicit npx commands** — Fallback when settings.json isn't configured
+| Old Step | Now Handled By |
+|----------|----------------|
+| pre-task | ✅ **PreToolUse hook** (automatic) |
+| session-restore | ✅ **PreToolUse hook** (automatic) |
+| post-edit | ✅ **PostToolUse hook** (automatic) |
+| session-end | ✅ **Stop hook** (automatic) |
 
-Templates ensure these commands are never forgotten.
+**What agents need to do:**
+1. **READ** context from memory
+2. **WORK** (hooks fire automatically)
+3. **PUBLISH** results to memory
 
 ## V3 vs V2 Changes
 
@@ -53,21 +58,22 @@ Templates ensure these commands are never forgotten.
 |--------|-------------------|------------------|
 | Package | `npx claude-flow@alpha` | `npx claude-flow@v3alpha` |
 | Coordinators | hierarchical, mesh, ring, star | `unified-coordinator` only |
+| **Protocol** | **6-step (manual hooks)** | **3-step (auto hooks)** |
 | Agent routing | Manual selection | Q-Learning pre-step available |
 | Work claims | None | Claims System for multi-session |
 | Memory search | Basic | HNSW (150x faster) |
 | Learning | Manual pattern capture | SONA auto-learns from hooks |
 | Two-step workflow | **Required** | **Still required** |
-| 6-step protocol | **Required** | **Still required** |
 
 ## Documents
 
 | Document | Purpose |
 |----------|---------|
 | [workflow.md](./workflow.md) | Decision trees and workflow phases |
-| [swarm-templates.md](./swarm-templates.md) | Agent spawn templates with 6-step protocol |
+| [swarm-templates.md](./swarm-templates.md) | Agent spawn templates with 3-step protocol |
 | [hive-mind-templates.md](./hive-mind-templates.md) | Queen-coordinated multi-phase swarms |
 | [reference.md](./reference.md) | V3 command reference and architecture |
+| [ralph-integration.md](./ralph-integration.md) | Ralph Wiggum iterative completion |
 
 ## Quick Start
 
@@ -82,7 +88,7 @@ npx claude-flow@v3alpha daemon start
 "Generate a swarm prompt for [OBJECTIVE] using ./swarm-templates.md"
 
 # 4. Review the generated prompt
-# Verify: @v3alpha commands, 6-step protocol, quality gates
+# Verify: @v3alpha commands, 3-step protocol, quality gates
 
 # 5. Execute
 "Spawn this swarm using the reviewed prompt"
@@ -96,9 +102,11 @@ that use `@alpha` and multiple coordinator types. Use binto-flow/ for V3.
 Key differences:
 - **Commands updated** to `@v3alpha`
 - **Coordinator consolidated** to `unified-coordinator`
+- **Protocol reduced** from 6 steps to 3 (hooks are automatic)
 - **V3 features added** (Claims, Q-Learning routing) where useful
-- **Same core approach** (templates, 6-step protocol, two-step workflow)
+- **Same core approach** (templates, two-step workflow)
 
 ---
 
-**Version**: 1.0 | **Last Updated**: 2026-01-17
+**Version**: 2.0 | **Last Updated**: 2026-01-17
+

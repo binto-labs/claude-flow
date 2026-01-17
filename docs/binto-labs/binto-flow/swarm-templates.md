@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: reference
-version: 1.0
+version: 2.0
 last-updated: 2026-01-17
 title: Swarm Templates (Binto-Flow V3)
 author: Claude Code + Human Developer
@@ -17,41 +17,41 @@ tags: [swarm, templates, agents, v3, binto-flow, protocol]
 
 ---
 
-## The 6-Step Protocol (V3)
+## The 3-Step Protocol (V3)
 
-**Every agent prompt MUST include all 6 steps:**
+**Why only 3 steps?** The `.claude/settings.json` hooks handle the rest automatically:
+- **PreToolUse hooks** → Auto-assign agents, load context on every Write/Edit
+- **PostToolUse hooks** → Auto-format, update memory on every Write/Edit
+- **Stop hooks** → Auto session-end, export metrics on completion
+
+**Every agent prompt needs just 3 steps:**
 
 ```bash
 # ═══════════════════════════════════════════════════════════════
-# 6-STEP PROTOCOL (V3) - COPY INTO EVERY AGENT PROMPT
+# 3-STEP PROTOCOL (V3) - COPY INTO EVERY AGENT PROMPT
 # ═══════════════════════════════════════════════════════════════
 
-# 1️⃣ BEFORE starting ANY work:
-npx claude-flow@v3alpha hooks pre-task --description "[AGENT-ROLE]: [brief task]"
-npx claude-flow@v3alpha hooks session-restore --session-id "swarm-[PROJECT-NAME]"
-
-# 2️⃣ READ context from swarm memory:
+# 1️⃣ READ context from swarm memory:
 npx claude-flow@v3alpha memory read --namespace "swarm/[PROJECT]" --key "plan" || true
 # [For dependent agents: wait loop for dependencies - see Dependency Pattern below]
 
-# 3️⃣ YOUR TASKS:
+# 2️⃣ YOUR TASKS:
 # - [Specific, measurable task 1]
 # - [Specific, measurable task 2]
 # - Run tests: npm test -- [test-pattern]
+# (Hooks run automatically on every file operation!)
 
-# 4️⃣ AFTER EVERY file you create/edit:
-npx claude-flow@v3alpha hooks post-edit --file "[FILE-PATH]" --memory-key "swarm/[AGENT]/progress"
-
-# 5️⃣ PUBLISH results for other agents:
+# 3️⃣ PUBLISH results for other agents:
 npx claude-flow@v3alpha memory store \
   --namespace "swarm/[AGENT-NAME]" \
   --key "[DELIVERABLE-NAME]" \
   --value "[RESULT-OR-SUMMARY]"
-
-# 6️⃣ AFTER completing ALL tasks:
-npx claude-flow@v3alpha hooks post-task --task-id "[AGENT-ROLE]"
-npx claude-flow@v3alpha hooks session-end --export-metrics true
 ```
+
+**What happens automatically (via `.claude/settings.json` hooks):**
+- ✅ Pre-task assignment and context loading
+- ✅ Post-edit memory updates and formatting
+- ✅ Session end with metrics export
 
 ---
 
@@ -80,15 +80,9 @@ echo "Contracts received, proceeding..."
 ```markdown
 You are the [AGENT-NAME] agent for the [PROJECT-NAME] swarm.
 
-## 🔧 COORDINATION PROTOCOL (EXECUTE EVERY STEP)
+## 🔧 COORDINATION PROTOCOL (3-STEP)
 
-### 1️⃣ BEFORE starting ANY work:
-```bash
-npx claude-flow@v3alpha hooks pre-task --description "[AGENT-ROLE]: [task summary]"
-npx claude-flow@v3alpha hooks session-restore --session-id "swarm-[PROJECT]"
-```
-
-### 2️⃣ READ context:
+### 1️⃣ READ context:
 [First agent reads requirements/design doc]
 [Dependent agents wait for dependencies:]
 ```bash
@@ -99,29 +93,20 @@ while ! npx claude-flow@v3alpha memory read \
 done
 ```
 
-### 3️⃣ YOUR TASKS:
+### 2️⃣ YOUR TASKS:
 - [ ] [Specific task 1 with acceptance criteria]
 - [ ] [Specific task 2 with acceptance criteria]
 - [ ] [Specific task 3 with acceptance criteria]
 - [ ] Run tests: `npm test -- [test-pattern]`
 
-### 4️⃣ AFTER EVERY file you edit:
-```bash
-npx claude-flow@v3alpha hooks post-edit --file "[file-path]" --memory-key "swarm/[agent]/progress"
-```
+(Hooks handle post-edit automatically on every file operation!)
 
-### 5️⃣ PUBLISH results:
+### 3️⃣ PUBLISH results:
 ```bash
 npx claude-flow@v3alpha memory store \
   --namespace "swarm/[AGENT-NAME]" \
   --key "[DELIVERABLE]" \
   --value "[SUMMARY-OR-CONTENT]"
-```
-
-### 6️⃣ AFTER completing ALL tasks:
-```bash
-npx claude-flow@v3alpha hooks post-task --task-id "[AGENT-ROLE]"
-npx claude-flow@v3alpha hooks session-end --export-metrics true
 ```
 
 ## QUALITY GATES (MANDATORY):
@@ -155,11 +140,11 @@ npx claude-flow@v3alpha hooks session-end --export-metrics true
 ```javascript
 // ✅ CORRECT: Single message with all Task() calls
 [
-  Task('Architect', '[full prompt with 6-step protocol]', 'system-architect'),
-  Task('Backend', '[full prompt with 6-step protocol]', 'backend-dev'),
-  Task('Frontend', '[full prompt with 6-step protocol]', 'coder'),
-  Task('Tester', '[full prompt with 6-step protocol]', 'tdd-london-swarm'),
-  Task('Reviewer', '[full prompt with 6-step protocol]', 'reviewer'),
+  Task('Architect', '[full prompt with 3-step protocol]', 'system-architect'),
+  Task('Backend', '[full prompt with 3-step protocol]', 'backend-dev'),
+  Task('Frontend', '[full prompt with 3-step protocol]', 'coder'),
+  Task('Tester', '[full prompt with 3-step protocol]', 'tdd-london-swarm'),
+  Task('Reviewer', '[full prompt with 3-step protocol]', 'reviewer'),
 ]
 
 // ❌ WRONG: Multiple messages breaks coordination
@@ -203,7 +188,7 @@ Agents:
 3. Tester - Writes tests (waits for contracts)
 4. Reviewer - Validates quality gates
 
-Use 6-step protocol from ./swarm-templates.md.
+Use 3-step protocol from ./swarm-templates.md.
 Quality gates: TypeScript 0 errors, tests passing, lint clean.
 ```
 
@@ -375,11 +360,12 @@ Generate a swarm for: User authentication with JWT
 - Security: No high/critical findings
 
 ## PROTOCOL:
-Use 6-step protocol from ./swarm-templates.md
+Use 3-step protocol from ./swarm-templates.md
 All agents use @v3alpha commands
 Single-message spawning
 ```
 
 ---
 
-**Version**: 1.0 | **Last Updated**: 2026-01-17
+**Version**: 2.0 | **Last Updated**: 2026-01-17
+

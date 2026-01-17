@@ -2,7 +2,7 @@
 status: keep
 phase: complete
 type: reference
-version: 1.0
+version: 2.0
 last-updated: 2026-01-17
 title: Hive-Mind Templates (Binto-Flow V3)
 author: Claude Code + Human Developer
@@ -78,18 +78,15 @@ You are the QUEEN agent for the [PROJECT] hive-mind.
 - Adapt strategy based on results
 - Make decisions when workers are blocked
 
-## PROTOCOL:
+## PROTOCOL (3-Step + Coordination):
 
-### 1️⃣ INITIALIZATION:
+### 1️⃣ READ & INITIALIZE:
 ```bash
-npx claude-flow@v3alpha hooks pre-task --description "Queen: [PROJECT] coordination"
-npx claude-flow@v3alpha hooks session-restore --session-id "hive-[PROJECT]"
-
 # Initialize hive
 npx claude-flow@v3alpha hive-mind init --topology mesh
 ```
 
-### 2️⃣ STRATEGIC PLANNING:
+### 2️⃣ STRATEGIC WORK:
 - Analyze the objective
 - Break into phases with clear deliverables
 - Identify dependencies between phases
@@ -101,11 +98,7 @@ npx claude-flow@v3alpha memory store \
   --value '{"phases": [...], "workers": [...], "quality_gates": [...]}'
 ```
 
-### 3️⃣ WORKER SPAWNING:
-Spawn all phase workers in ONE message.
-Each worker follows 6-step protocol.
-
-### 4️⃣ MONITORING:
+### MONITORING:
 ```bash
 # Check worker progress
 npx claude-flow@v3alpha memory list --namespace "hive/workers/*"
@@ -114,18 +107,22 @@ npx claude-flow@v3alpha memory list --namespace "hive/workers/*"
 npx claude-flow@v3alpha hive-mind broadcast --message "[instruction]"
 ```
 
-### 5️⃣ ADAPTATION:
+### ADAPTATION:
 If workers encounter blockers:
 - Read their memory reports
 - Make strategic decisions
 - Update plan in memory
 - Notify affected workers
 
-### 6️⃣ COMPLETION:
+### 3️⃣ PUBLISH completion status:
 ```bash
-npx claude-flow@v3alpha hooks post-task --task-id "queen"
-npx claude-flow@v3alpha hooks session-end --export-metrics true
+npx claude-flow@v3alpha memory store \
+  --namespace "hive/queen" \
+  --key "status" \
+  --value '{"phase": "complete", "results": [...]}'
 ```
+
+(Session end handled automatically by hooks!)
 ```
 
 ---
@@ -141,16 +138,13 @@ You are a WORKER agent in the [PROJECT] hive-mind.
 - Coordinate with other workers via memory
 - Escalate blockers to Queen
 
-## PROTOCOL:
+## PROTOCOL (3-Step):
 
-### 1️⃣ JOIN HIVE:
+### 1️⃣ READ assignments:
 ```bash
-npx claude-flow@v3alpha hooks pre-task --description "Worker: [ROLE]"
+# Join hive
 npx claude-flow@v3alpha hive-mind join --role worker
-```
 
-### 2️⃣ READ ASSIGNMENTS:
-```bash
 # Get Queen's plan
 npx claude-flow@v3alpha memory read --namespace "hive/queen" --key "plan"
 
@@ -158,12 +152,14 @@ npx claude-flow@v3alpha memory read --namespace "hive/queen" --key "plan"
 npx claude-flow@v3alpha memory read --namespace "hive/workers/[ROLE]" --key "assignment"
 ```
 
-### 3️⃣ EXECUTE TASKS:
+### 2️⃣ EXECUTE TASKS:
 - [ ] [Task 1]
 - [ ] [Task 2]
 - [ ] [Task 3]
 
-### 4️⃣ PROGRESS REPORTING:
+(Hooks handle post-edit automatically on every file operation!)
+
+### PROGRESS REPORTING (during work):
 ```bash
 # After each significant milestone
 npx claude-flow@v3alpha memory store \
@@ -174,8 +170,7 @@ npx claude-flow@v3alpha memory store \
 npx claude-flow@v3alpha hooks notify --message "[ROLE]: [progress update]"
 ```
 
-### 5️⃣ BLOCKER ESCALATION:
-If blocked, immediately notify Queen:
+### BLOCKER ESCALATION (if needed):
 ```bash
 npx claude-flow@v3alpha memory store \
   --namespace "hive/workers/[ROLE]" \
@@ -187,7 +182,7 @@ npx claude-flow@v3alpha hive-mind consensus --action propose \
   --value '{"from": "[ROLE]", "issue": "..."}'
 ```
 
-### 6️⃣ COMPLETION:
+### 3️⃣ PUBLISH deliverable:
 ```bash
 npx claude-flow@v3alpha memory store \
   --namespace "hive/workers/[ROLE]" \
@@ -195,8 +190,9 @@ npx claude-flow@v3alpha memory store \
   --value "[RESULT]"
 
 npx claude-flow@v3alpha hive-mind leave
-npx claude-flow@v3alpha hooks post-task --task-id "[ROLE]"
 ```
+
+(Session end handled automatically by hooks!)
 ```
 
 ---
@@ -308,13 +304,13 @@ Protocol: Full Queen template from ./hive-mind-templates.md
 Role: Design and contracts
 Wait for: Queen's plan
 Deliver: contracts.ts, decisions.md
-Protocol: Worker template, report to Queen
+Protocol: 3-step worker template, report to Queen
 
 #### Researcher (researcher)
 Role: Pattern discovery
 Wait for: Queen's plan
 Deliver: research_report.md
-Protocol: Worker template, report to Queen
+Protocol: 3-step worker template, report to Queen
 
 ### PHASE 2 WORKERS:
 
@@ -322,19 +318,19 @@ Protocol: Worker template, report to Queen
 Role: API implementation
 Wait for: Architect contracts, Queen signal
 Deliver: src/api/*
-Protocol: Worker template, report to Queen
+Protocol: 3-step worker template, report to Queen
 
 #### Frontend Developer (coder)
 Role: UI implementation
 Wait for: Architect contracts, Queen signal
 Deliver: src/ui/*
-Protocol: Worker template, report to Queen
+Protocol: 3-step worker template, report to Queen
 
 #### TDD Developer (tdd-london-swarm)
 Role: Test implementation
 Wait for: Architect contracts
 Deliver: tests/*
-Protocol: Worker template, report to Queen
+Protocol: 3-step worker template, report to Queen
 
 ### PHASE 3 WORKERS:
 
@@ -342,13 +338,13 @@ Protocol: Worker template, report to Queen
 Role: Quality validation
 Wait for: All implementation complete
 Deliver: approval or fix requests
-Protocol: Worker template, report to Queen
+Protocol: 3-step worker template, report to Queen
 
 #### Security Auditor (security-architect)
 Role: Security review
 Wait for: All implementation complete
 Deliver: security_report.md
-Protocol: Worker template, report to Queen
+Protocol: 3-step worker template, report to Queen
 
 ## QUALITY GATES:
 - TypeScript: 0 errors
@@ -360,7 +356,7 @@ Protocol: Worker template, report to Queen
 hive/[PROJECT]/
 
 ## PROTOCOL:
-- All agents use 6-step protocol
+- All agents use 3-step protocol
 - All @v3alpha commands
 - Single-message spawning
 - Queen coordinates phases
@@ -411,4 +407,5 @@ npx claude-flow@v3alpha hive-mind memory --action get --key "..."
 
 ---
 
-**Version**: 1.0 | **Last Updated**: 2026-01-17
+**Version**: 2.0 | **Last Updated**: 2026-01-17
+
