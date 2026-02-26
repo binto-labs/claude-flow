@@ -4,7 +4,8 @@
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_FLOW_V3_ENABLED": "true",
-    "CLAUDE_FLOW_HOOKS_ENABLED": "true"
+    "CLAUDE_FLOW_HOOKS_ENABLED": "true",
+    "CLAUDE_FLOW_ENFORCE": "warn"
   },
   "permissions": {
     "allow": [
@@ -51,6 +52,16 @@
             "timeout": 5000
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.claude/helpers/hook-handler.cjs\" pre-edit-gate",
+            "timeout": 3000
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -61,6 +72,16 @@
             "type": "command",
             "command": "node \"$(git rev-parse --show-toplevel)/.claude/helpers/hook-handler.cjs\" post-edit",
             "timeout": 10000
+          }
+        ]
+      },
+      {
+        "matcher": "^mcp__claude-flow__",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.claude/helpers/hook-handler.cjs\" mcp-observe",
+            "timeout": 3000
           }
         ]
       }

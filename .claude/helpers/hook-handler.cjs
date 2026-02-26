@@ -34,6 +34,7 @@ const router = safeRequire(path.join(helpersDir, 'router.cjs'));
 const session = safeRequire(path.join(helpersDir, 'session.cjs'));
 const memory = safeRequire(path.join(helpersDir, 'memory.cjs'));
 const intelligence = safeRequire(path.join(helpersDir, 'intelligence.cjs'));
+const enforcer = safeRequire(path.join(helpersDir, 'workflow-monitor.cjs'));
 
 const [,, command, ...args] = process.argv;
 const prompt = process.env.PROMPT || process.env.TOOL_INPUT_command || args.join(' ') || '';
@@ -60,6 +61,12 @@ const handlers = {
     } else {
       console.log('[INFO] Router not available, using default routing');
     }
+    if (enforcer && enforcer.checkDrift) {
+      try {
+        var drift = enforcer.checkDrift();
+        if (drift) console.log(drift);
+      } catch (e) { /* non-fatal */ }
+    }
   },
 
   'pre-bash': () => {
@@ -70,6 +77,15 @@ const handlers = {
         console.error('[BLOCKED] Dangerous command detected: ' + dangerous[i]);
         process.exit(1);
       }
+    }
+    if (enforcer && enforcer.checkCommit && cmd.includes('git commit')) {
+      try {
+        var commitCheck = enforcer.checkCommit();
+        if (!commitCheck.allow) {
+          console.error(commitCheck.reason);
+          process.exit(2);
+        }
+      } catch (e) { /* non-fatal */ }
     }
     console.log('[OK] Command validated');
   },
@@ -107,6 +123,9 @@ const handlers = {
   },
 
   'session-end': () => {
+    if (enforcer && enforcer.auditSession) {
+      try { enforcer.auditSession(); } catch (e) { /* non-fatal */ }
+    }
     if (intelligence && intelligence.consolidate) {
       try {
         var result = intelligence.consolidate();
@@ -165,6 +184,34 @@ const handlers = {
     console.log('Auto-compact proceeding with full agent context');
   },
 
+  'mcp-observe': () => {
+    if (enforcer && enforcer.recordMcpCall) {
+      var toolName = process.env.TOOL_INPUT_tool_name || process.env.TOOL_NAME || '';
+      if (!toolName && !process.stdin.isTTY) {
+        try {
+          var stdin = fs.readFileSync(0, 'utf-8');
+          if (stdin) {
+            var parsed = JSON.parse(stdin);
+            toolName = parsed.tool_name || parsed.toolName || '';
+          }
+        } catch (e) { /* stdin not available or not JSON */ }
+      }
+      try { enforcer.recordMcpCall(toolName); } catch (e) { /* non-fatal */ }
+    } else {
+      console.log('[OK] MCP call observed (enforcer not loaded)');
+    }
+  },
+
+  'pre-edit-gate': () => {
+    if (enforcer && enforcer.checkEdit) {
+      try {
+        var result = enforcer.checkEdit();
+        if (result.reason) console.log(result.reason);
+        if (!result.allow) process.exit(2);
+      } catch (e) { /* non-fatal, allow edit */ }
+    }
+  },
+
   'status': () => {
     console.log('[OK] Status check');
   },
@@ -187,5 +234,5 @@ if (command && handlers[command]) {
 } else if (command) {
   console.log('[OK] Hook: ' + command);
 } else {
-  console.log('Usage: hook-handler.cjs <route|pre-bash|post-edit|session-restore|session-end|pre-task|post-task|compact-manual|compact-auto|status|stats>');
+  console.log('Usage: hook-handler.cjs <route|pre-bash|post-edit|session-restore|session-end|pre-task|post-task|compact-manual|compact-auto|status|stats|mcp-observe|pre-edit-gate>');
 }
