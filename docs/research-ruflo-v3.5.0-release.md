@@ -1,6 +1,6 @@
 # Research: RuFlo v3.5.0 Production Release
 
-**Date**: 2026-02-27
+**Date**: 2026-02-27 (initial), updated 2026-02-28
 **Branch**: `claude/research-ruflow-release-X8KqO`
 **Subject**: Claude Flow → RuFlo rebrand and v3.5.0 graduation from alpha
 
@@ -8,42 +8,58 @@
 
 ## Executive Summary
 
-Claude Flow has been rebranded to **RuFlo** (stylized as 🌊 RuFlo). Version 3.5.0 was released on February 27, 2026 as a GitHub release, marking the first production-ready (non-alpha) release after 10 months of alpha development spanning versions 3.0.0-alpha.1 through 3.1.0-alpha.44.
+Claude Flow has been rebranded to **RuFlo** (stylized as 🌊 RuFlo). Version 3.5.0 was published to npm on February 27, 2026 (followed quickly by a 3.5.1 patch), marking the first production-ready (non-alpha) release after 10 months of alpha development spanning versions 3.0.0-alpha.1 through 3.1.0-alpha.55.
 
 The rebrand is a **dual-package branding layer** — internal packages remain `@claude-flow/*`, while two umbrella packages (`claude-flow` and `ruflo`) coexist on npm. This was an intentional design decision (ADR-046) to avoid breaking changes for existing users.
+
+The upstream repository (`ruvnet/claude-flow`) has 15,586 stars, 1,801 forks, and 246 published versions of the CLI package. All three npm packages now point to v3.5.1 across all dist-tags.
 
 ---
 
 ## 1. Release Status
 
-### GitHub Release
+### npm Publication Timeline
 
-| Field | Value |
-|-------|-------|
-| Tag | `v3.5.0` |
-| Title | 🌊 Ruflo v3.5.0 — Production Release |
-| Date | 2026-02-27 (today) |
-| Type | Latest (first non-pre-release) |
-| Previous | `v3.1.0-alpha.44` (2026-02-23, pre-release) |
+All three packages were published to npm on February 27, 2026:
 
-### npm Package Versions (as of research time)
+| Package | v3.5.0 Published | v3.5.1 Published | Delta |
+|---------|-----------------|-----------------|-------|
+| `@claude-flow/cli` | 2026-02-27 22:58:17 UTC | 2026-02-27 23:22:56 UTC | ~25 min |
+| `claude-flow` | 2026-02-27 22:58:33 UTC | 2026-02-27 23:23:05 UTC | ~25 min |
+| `ruflo` | 2026-02-27 22:58:36 UTC | 2026-02-27 23:23:09 UTC | ~25 min |
 
-| Package | Published Version | Notes |
-|---------|------------------|-------|
-| `ruflo` | 3.1.0-alpha.44 | Not yet updated to 3.5.0 |
-| `claude-flow` | 3.1.0-alpha.44 | Not yet updated to 3.5.0 |
-| `@claude-flow/cli` | 3.1.0-alpha.40 | Not yet updated to 3.5.0 |
+The version jumped from `3.1.0-alpha.55` directly to `3.5.0`, skipping 3.2-3.4 entirely. v3.5.1 followed 25 minutes later as a dependency cleanup (removed `agentic-flow`, `@claude-flow/guidance`, `@claude-flow/aidefence` from `@claude-flow/cli`).
 
-**Finding**: The v3.5.0 release exists as a GitHub release/tag only. npm packages have not yet been published at 3.5.0. The codebase in this fork is at 3.1.0-alpha.44.
+### Current npm Dist-Tags
 
-### Repository Stats
+| Package | `latest` | `alpha` | `v3alpha` |
+|---------|----------|---------|-----------|
+| `@claude-flow/cli` | 3.5.1 | 3.5.1 | 3.5.1 |
+| `claude-flow` | 3.5.1 | 3.5.1 | 3.5.1 |
+| `ruflo` | 3.5.1 | 3.5.1 | — |
+
+### GitHub Release Status
+
+The most recent GitHub Release is **v3.0.0-alpha.79** (2026-01-15). No GitHub Release was created for v3.5.0 or v3.5.1 — the production release exists only on npm.
+
+### Repository Stats (upstream: ruvnet/claude-flow)
 
 | Metric | Value |
 |--------|-------|
-| Stars | 2,268 |
-| Forks | 238 |
+| Stars | 15,586 |
+| Forks | 1,801 |
+| Open Issues | 530 |
+| Total CLI versions published | 246 |
 | Commits | 5,800+ (claimed) |
-| Alpha iterations | Hundreds (3.0.0-alpha.1 → 3.1.0-alpha.44) |
+| Alpha iterations | 3.0.0-alpha.1 → 3.1.0-alpha.55 |
+| Created | June 2, 2025 |
+
+### This Fork (binto-labs/claude-flow)
+
+| Metric | Value |
+|--------|-------|
+| Local version | 3.1.0-alpha.44 |
+| Behind upstream | Needs sync to v3.5.1 |
 
 ---
 
@@ -202,12 +218,16 @@ Installation: `claude mcp add ruflo -- npx -y ruflo@latest`
 
 ## 6. Key Observations
 
-1. **Version jump**: 3.1.0-alpha.44 → 3.5.0 is a significant semver jump, signaling maturity graduation
-2. **npm lag**: GitHub release exists but npm packages haven't been bumped to 3.5.0 yet
-3. **Stars discrepancy**: GitHub shows 2,268 stars vs. "approaching 16,000" in the announcement — may refer to combined ecosystem metrics or aspirational framing
-4. **Dual branding**: Both `ruflo` and `claude-flow` will continue to work — no migration required
-5. **Internal consistency**: All `@claude-flow/*` packages retain their naming, reducing ecosystem disruption
-6. **Enterprise positioning**: The release frames RuFlo as enterprise-grade, production-ready, Fortune 500-used
+1. **Version jump**: 3.1.0-alpha.55 → 3.5.0 skips 3.2-3.4 entirely, signaling maturity graduation rather than incremental progress
+2. **npm-only release**: v3.5.0/3.5.1 were published to npm but no corresponding GitHub Release was created (latest GH release is v3.0.0-alpha.79)
+3. **Quick patch**: v3.5.1 followed v3.5.0 by just 25 minutes, removing 3 dependencies from @claude-flow/cli
+4. **Stars verified**: Upstream repo has **15,586 stars** and **1,801 forks** — the "approaching 16,000" claim is accurate
+5. **Dual branding**: Both `ruflo` and `claude-flow` continue to work — no migration required
+6. **Internal consistency**: All `@claude-flow/*` packages retain their naming, reducing ecosystem disruption
+7. **Enterprise positioning**: The release frames RuFlo as enterprise-grade, production-ready, Fortune 500-used
+8. **Third-party recognition**: Listed in "Top 10+ Agentic Orchestration Frameworks & Tools in 2026" by AIMultiple
+9. **This fork is behind**: Local codebase is at 3.1.0-alpha.44, needs sync to v3.5.1
+10. **No changelog entries**: Neither local CHANGELOG.md nor v3/CHANGELOG.md have entries for v3.5.x
 
 ---
 
@@ -225,3 +245,32 @@ From the GitHub release:
 ```bash
 claude mcp add ruflo -- npx -y ruflo@latest
 ```
+
+---
+
+## 8. External Coverage & Metrics
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| npm total downloads | "Closing in on 500,000" | Web search |
+| Monthly active users | ~100,000 | Web search |
+| Countries | 80+ | Announcement |
+| SWE-Bench solve rate | 84.8% | Web search |
+| Cost savings (3-tier routing) | 75% | Web search |
+| Token reduction | 32.3% | Web search |
+| Batch spawning speedup | 10-20x | Web search |
+| Claude subscription capacity | 250% improvement | Web search |
+
+Third-party coverage:
+- Listed in AIMultiple "Top 10+ Agentic Orchestration Frameworks & Tools in 2026"
+- Medium quickstart guide by Ngoc Phan
+- Official site: claude-flow.ruv.io
+
+---
+
+## 9. Actions for This Fork
+
+1. **Sync upstream**: Pull v3.5.1 changes from `ruvnet/claude-flow` to align with production release
+2. **Update local versions**: Bump package.json versions to match 3.5.1
+3. **Review dependency changes**: v3.5.1 removed `agentic-flow`, `@claude-flow/guidance`, `@claude-flow/aidefence` from CLI deps
+4. **Update CHANGELOG**: No v3.5.x entries exist in either changelog file
